@@ -1,0 +1,12 @@
+scope:
+  wrapping_scope: "明确到立面/轴线/构件"
+  materials:
+    - name: aluminum_panel
+      grade: "3003-H24"
+      thickness_mm: 3.0
+      finish: "project-specific"
+  joint_mm: 15
+  panelization_rule: "project-specific"
+  node_rule: "reference approved detail drawings"
+  assumptions: []
+  exclusions: []
