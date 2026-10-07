@@ -1,0 +1,30 @@
+project:
+  name: example-project
+  units: mm
+
+parser:
+  provider: auto
+  acadsharp_command_env: CADFAB_ACADSHARP_DUMP
+  dxf_debug_allowed: true
+
+geometry:
+  provider: occt
+  units: mm
+  absolute_tolerance_mm: 0.1
+  angular_tolerance_deg: 0.1
+
+fabrication:
+  provider: builtin-review
+  require_bend_adapter_for_folded_parts: true
+
+nesting:
+  provider: builtin-shelf-review
+  stock_width_mm: 1500
+  stock_height_mm: 4000
+  gap_mm: 10
+  edge_margin_mm: 10
+
+workflow:
+  require_scope_confirmation: true
+  require_survey_confirmation_for_remeasured: true
+  delivery_status: REVIEW
