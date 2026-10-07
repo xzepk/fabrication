@@ -33,16 +33,9 @@ stdout 必须是 JSON，至少包含：
 - planar plate 1:1 DXF flat pattern
 - geometry metrics needed by BOM
 
-## Rhino Provider
+## build123d and Rhino Providers
 
-Rhino 不是硬依赖。若项目需要，配置外部工程 adapter：
-
-- `CADFAB_RHINO_ADAPTER_URL`
-- 可选 `CADFAB_RHINO_ADAPTER_KEY`
-
-Skill 只调用受控工程接口，例如 `health`, `build-component`, `unroll-component`。外部 adapter 内部可使用 Rhino.Compute/RhinoCommon/Grasshopper，但 Skill 不直接持有 Rhino license token，不暴露任意 RhinoCommon 调用给 Agent。
-
-如果 adapter 不可用，provider 必须明确失败；不得静默回落到不同几何内核并继续生产。
+build123d is an optional deterministic provider with the same local shape whitelist and real STEP acceptance. Rhino is an optional shared-filesystem HTTP adapter, not an opaque-metrics pass-through. Exact endpoints/output contracts, JSON proposal intake and limitations are maintained in [providers.md](providers.md). No automatic fallback occurs.
 
 ## Fabrication Adapter
 

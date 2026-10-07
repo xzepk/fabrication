@@ -1,6 +1,6 @@
-# CAD Fabrication Engineering Skill v3.3
+# CAD Fabrication Engineering Skill v3.4
 
-V3.3 keeps the V3.2 Geometry-IR/B-Rep/drawing-quality pipeline and tightens the DWG runtime boundary.
+V3.4 keeps the V3.2 Geometry-IR/B-Rep/drawing-quality pipeline and tightens the DWG runtime boundary.
 
 ## Parser architecture
 
@@ -15,3 +15,9 @@ V3.3 keeps the V3.2 Geometry-IR/B-Rep/drawing-quality pipeline and tightens the 
 This keeps licensing, runtime updates and OS-specific installation outside the Skill while preserving deterministic project behavior.
 
 See `references/dwg-adapter-contract.md` and `SKILL.md`.
+
+## CAD runtime selection
+
+Version 3.4.0 is a local review build. Default `cadquery` preserves compatibility; explicit `build123d`, `cadgen` and availability-only `auto` are implemented. Runtimes remain external. Saved STEP geometry is independently re-opened for both drawing and QA. The runner refuses existing output directories and never deletes previous runs.
+
+See `references/text-to-cad-integration.md` and `references/runtime-setup.md` for installation, actual API coverage and acceptance limits. The current adapter is nominal rectangular panels only; cadgen export acceptance is blocked by local IPC restrictions in the managed review environment and is not claimed as passed.

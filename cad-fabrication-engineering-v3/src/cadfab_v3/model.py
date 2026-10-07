@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, asdict
 from pathlib import Path
 import hashlib
+import math
 from typing import Any
 
 
@@ -69,7 +70,27 @@ def build_geometry_ir(cfg: dict[str, Any]) -> dict[str, Any]:
     "overall depth" merely because their numbers add up.
     """
     g = cfg["geometry"]
-    n = int(g["bay_count"])
+    scalar_dimensions = {"overall_length", "bay_count", "bay_pitch", "end_margin_left", "end_margin_right", "end_margin_each", "front_fascia_drop", "front_fascia_height", "profile_path_length_ref", "panel_thickness", "joint_gap"}
+    for key in scalar_dimensions & set(g):
+        value = g[key]
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError(f"geometry.{key} must be a real number, not bool or text")
+    for key in ("top_depth_bands", "depth_bands"):
+        if key in g:
+            if not isinstance(g[key], list) or any(isinstance(v, bool) or not isinstance(v, (int, float)) for v in g[key]):
+                raise ValueError(f"geometry.{key} must be a list of real numbers, not bool or text")
+    for key in ("density_kg_m3", "thickness"):
+        value = cfg.get("material", {}).get(key)
+        if key in cfg.get("material", {}) and (isinstance(value, bool) or not isinstance(value, (int, float))):
+            raise ValueError(f"material.{key} must be a real number, not bool or text")
+    if isinstance(g.get("bay_count"), bool) or not isinstance(g.get("bay_count"), int):
+        raise ValueError("geometry.bay_count must be an integer, not a bool or truncated number")
+    if g.get("joint_strategy", "CENTERED_REFERENCE") != "CENTERED_REFERENCE":
+        raise ValueError("Only CENTERED_REFERENCE joint_strategy is implemented")
+    for current, legacy in (("top_depth_bands", "depth_bands"), ("front_fascia_drop", "front_fascia_height")):
+        if current in g and legacy in g and g[current] != g[legacy]:
+            raise ValueError(f"Conflicting geometry aliases: {current} and {legacy}")
+    n = g["bay_count"]
     pitch = float(g["bay_pitch"])
     depth_bands = [float(v) for v in g.get("top_depth_bands", g.get("depth_bands", []))]
     if not depth_bands:
@@ -83,6 +104,11 @@ def build_geometry_ir(cfg: dict[str, Any]) -> dict[str, Any]:
     top_depth = sum(depth_bands)
     profile_path = float(g.get("profile_path_length_ref", top_depth + fascia_h))
 
+    values = [pitch, *depth_bands, t, gap, margin_left, margin_right, fascia_h, overall_length, top_depth, profile_path]
+    if not all(math.isfinite(value) for value in values):
+        raise ValueError("Geometry dimensions must all be finite")
+    if margin_left < 0 or margin_right < 0 or fascia_h < 0 or overall_length <= 0 or profile_path <= 0:
+        raise ValueError("Invalid setout margins, fascia height, length or reference profile")
     if pitch <= 0 or n <= 0 or t <= 0:
         raise ValueError("bay_count, bay_pitch and panel_thickness must be positive")
     if gap < 0 or gap >= pitch:
@@ -116,6 +142,8 @@ def build_geometry_ir(cfg: dict[str, Any]) -> dict[str, Any]:
 
     material = cfg.get("material", {})
     density = float(material.get("density_kg_m3", 2730))
+    if not math.isfinite(density) or density <= 0:
+        raise ValueError("material.density_kg_m3 must be finite and positive")
     net_area = sum(p.area_m2 for p in parts)
     net_mass = net_area * (t/1000.0) * density
 

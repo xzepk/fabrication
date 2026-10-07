@@ -17,9 +17,9 @@ def main():
     if len(skills)!=1: errors.append(f'exactly one SKILL.md required, found {len(skills)}')
     forbidden=[]
     for p in root.rglob('*'):
-        if '__pycache__' in p.parts or p.name in {'.pytest_cache','.DS_Store'} or p.suffix in {'.pyc','.pyo'}: forbidden.append(str(p))
+        if '__pycache__' in p.parts or p.name in {'.pytest_cache','.DS_Store','.venv','venv','site-packages','node_modules','bin','obj'} or p.suffix.lower() in {'.pyc','.pyo','.dll','.so','.pyd','.exe','.dylib','.step','.stl','.dwg','.dxf','.zip'}: forbidden.append(str(p))
     if forbidden: errors.append('runtime artifacts present: '+', '.join(forbidden[:5]))
-    refs=['references/architecture.md','references/data-contract.md','references/adapters.md','references/engineering.md','references/operations.md','references/sources.md','config/project.example.yaml','schemas/component.schema.json']
+    refs=['references/architecture.md','references/data-contract.md','references/adapters.md','references/engineering.md','references/operations.md','references/providers.md','references/sources.md','config/project.example.yaml','schemas/component.schema.json']
     for r in refs:
         if not (root/r).exists(): errors.append(f'missing referenced file: {r}')
     if errors:

@@ -16,6 +16,7 @@ Master Skill / deterministic CLI
     |
     +--> Geometry Provider --------> geometry artifacts
     |       +-- OCCT/CadQuery [default]
+    |       +-- build123d templates [optional]
     |       +-- Rhino adapter [optional]
     |
     +--> Fabrication Provider -----> unfold/bend-specific outputs
@@ -36,3 +37,5 @@ Master Skill / deterministic CLI
 ## Provider 路由
 
 默认 `occt`。不要自动切到 Rhino；Provider 改变必须来自项目配置或明确授权，并写入 run manifest。
+
+See providers.md for candidate-only text-to-cad/cadgen intake and STEP roundtrip acceptance. No other skill is imported or invoked. Runtime libraries and output artifacts remain external.

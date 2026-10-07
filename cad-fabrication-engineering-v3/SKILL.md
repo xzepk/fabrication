@@ -1,17 +1,17 @@
 ---
 name: cad-fabrication-engineering-v3
 description: >-
-  Engineering-grade CAD deepening and fabrication workflow for architectural, curtain-wall, canopy and metal-cladding projects. Parses traceable DWG/DXF evidence into Geometry IR, generates deterministic B-Rep/STEP models, projects professional engineering drawings from the B-Rep, creates controlled DXF/BOM outputs, applies survey changes, and runs cross-artifact QA. Use when engineering drawings must be clearer and more reliable than LLM-authored CAD sketches. Preferred backend is text-to-cad cadgen/build123d/OCP; bundled deterministic fallback is CadQuery/OCP; Rhino.Compute is optional for difficult NURBS/freeform geometry. Never substitutes a nominal face layout for a true fabrication flat pattern.
+  Engineering-grade CAD deepening and fabrication workflow for architectural, curtain-wall, canopy and metal-cladding projects. Parses traceable DWG/DXF evidence into Geometry IR, generates deterministic B-Rep/STEP models, projects professional engineering drawings from the B-Rep, creates controlled DXF/BOM outputs, applies survey changes, and runs cross-artifact QA. Use when engineering drawings must be clearer and more reliable than LLM-authored CAD sketches. Includes explicit external text-to-cad cadgen/build123d provider integration and a CadQuery compatibility route. The current runnable model adapter is limited to nominal rectangular XY/XZ panels; complex geometry requires a separately verified adapter. Never substitutes a nominal face layout for a true fabrication flat pattern.
 compatibility: >-
-  Windows 10/11 or Linux; Python 3.11+. Preferred CAD/documentation backend: text-to-cad cadgen/build123d/OCP. Bundled compatibility backend: CadQuery/OCP + ezdxf + ReportLab. Production DWG parsing uses external runtime adapters only: ACadSharp/.NET 8+ is the primary environment dependency; ODA Drawings SDK/helper is an optional external fallback. Neither runtime nor helper binaries/source are bundled in this skill. Optional Rhino.Compute on Windows for advanced NURBS/freeform geometry.
+  Windows 10/11 or Linux; Python 3.11+. CAD runtime choices: external cadgen 0.7.15 or build123d 0.10.0/0.11.1; default compatibility route: externally installed CadQuery/OCP + ezdxf + ReportLab/PyMuPDF. Production DWG parsing uses external runtime adapters only: ACadSharp/.NET 8+ is the primary environment dependency; ODA Drawings SDK/helper is an optional external fallback. Neither runtime nor helper binaries/source are bundled in this skill. Rhino.Compute is an optional project-specific extension, not implemented by the reference runner.
 metadata:
-  version: "3.3.0"
+  version: "3.4.0"
   ir_version: "1.1"
   domain: "architectural-cad-fabrication"
   architecture: "evidence-geometry-ir-parametric-brep-projected-drawing"
 ---
 
-# CAD Fabrication Engineering v3.3
+# CAD Fabrication Engineering v3.4
 
 ## Mission
 
@@ -77,33 +77,17 @@ A production flat pattern can be released only when:
 
 ## CAD backend policy
 
-### Preferred: text-to-cad `cadgen/build123d/OCP`
+### Controlled providers, explicit selection
 
-When installed, follow its current local skill contract:
+The reference runner supports `--backend cadquery|build123d|cadgen|auto`; default `cadquery` preserves existing projects. `cadgen` invokes the actual external 0.7.15 parameterless `@step` API. `build123d` invokes the selected external interpreter's geometry/export API. `--runtime-python` selects that environment. Only explicit `auto` permits availability fallback; a selected provider's build failure is always fatal.
 
-- one maintained parametric model entrypoint per model/configuration;
-- STEP as saved/interchange geometry;
-- engineering views projected from geometry;
-- dimensions tied to model facts, not retyped drawing numbers;
-- real DXF planar geometry from model faces/profiles;
-- snapshot review after visible STEP changes;
-- source regeneration instead of editing final artifacts in place.
+Keep all runtimes outside this skill. Read [integration contract](references/text-to-cad-integration.md) for scope, provenance and upstream API limits, and [runtime setup](references/runtime-setup.md) for separate environments and acceptance commands.
 
-### Bundled fallback: `CadQuery/OCP`
+For all providers, drawings use the saved STEP readback, OCCT HLR, ReportLab/PyMuPDF and ezdxf. The upstream cadgen engineering-drawing API is PDF-only and has no sections/details; the skill does not claim to invoke that API or obtain complete DXF engineering from it. Re-open STEP/PDF/DXF, review the rendered previews, and regenerate from source rather than patching final geometry.
 
-The reference runner is fully deterministic and uses:
+### Reference adapter boundary
 
-- CadQuery/OCP for B-Rep and STEP;
-- OCCT Hidden Line Removal (HLR) for top/front/end/isometric projection;
-- ReportLab for controlled A3 PDF sheets;
-- ezdxf for semantic-layer engineering DXF;
-- PyMuPDF/ezdxf/CadQuery read-back for QA.
-
-The fallback preserves the same Geometry IR and artifact roles so projects can move to cadgen later without changing engineering rules.
-
-### Optional: Rhino.Compute
-
-Use only for geometry that materially benefits from Rhino's NURBS/freeform operations: double-curved skins, complex lofts, surface offsets/intersections and specialty façade panelization. Ordinary plates, planar cladding and profiles stay on the default B-Rep backend.
+The runnable adapter currently verifies nominal rectangular panels in XY/XZ only. Unsupported geometry/features/capability requirements and production release are refused. This is not a general-purpose cladding, bending, NURBS, node-detail or true-unfolding solver. A Rhino.Compute or other advanced route must be implemented and independently verified for its project before claiming support; it is not selected by this runner.
 
 ## Production DWG parser policy
 
@@ -185,7 +169,7 @@ The generated PDF must pass automated checks for:
 
 Then render every sheet to PNG and visually inspect it. Automated checks do not prove that a leader, note or dimension is aesthetically ideal.
 
-For stable Chinese text in controlled PDFs, the runner first discovers an embeddable system CJK font. Set `CADFAB_CJK_FONT` to an approved TTF/TTC path when the workstation font inventory is nonstandard; the skill does not bundle font files.
+For stable Chinese text in controlled PDFs, the runner first discovers an embeddable system CJK font. Set `CADFAB_CJK_FONT` to an approved font path as an exclusive override: a missing/inadequate override is not silently replaced by another font. The skill does not bundle fonts. Optional config `display_labels` maps exact original text to reviewed English/pinyin ASCII; the runner preserves it in IR. Unknown untranslated safety notes fail QA. Original IDs remain in IR/BOM/manifests alongside portable display/file labels and mapping sidecars.
 
 Read `references/cad-quality-standard.md` before changing drawing layout code.
 
@@ -243,7 +227,7 @@ Even `PRODUCTION_CANDIDATE` still requires the organization's normal release aut
 ### Reference end-to-end run
 
 ```bash
-python scripts/run_project.py config/canopy-reference-validation.yaml
+python scripts/run_project.py config/canopy-reference-validation.yaml outputs/new-review-run --backend cadquery
 ```
 
 ### Package validation and tests
@@ -264,7 +248,10 @@ Golden samples are immutable regression references only. Never hard-code their l
 
 ## Reference output contract
 
-A run may produce:
+The output directory must be new; previous outputs and inputs are never deleted. A run may produce:
+
+- `INPUTS/config.yaml` - exact original configuration snapshot;
+- `SOURCE/<project>.py` - generated parameterless external-provider model, when selected;
 
 - `geometry_ir.json` - canonical contract;
 - `STEP/<project>.step` - B-Rep at declared geometry maturity;
@@ -281,6 +268,6 @@ When a true fabrication solid/unfolding workflow is available, replace the refer
 
 ## Current reference validation boundary
 
-The supplied canopy sample demonstrates the V3.3 drawing/model/QA pipeline, but its source semantics are still based on recovered dimensions because the current execution environment has not provided an external ACadSharp or ODA adapter runtime.
+The supplied canopy sample demonstrates the V3.4 drawing/model/QA pipeline, but its source semantics are still based on recovered dimensions because the current execution environment has not provided an external ACadSharp or ODA adapter runtime.
 
 Therefore it intentionally remains `REFERENCE_VALIDATION` with blocking assumptions. The skill is designed to fail closed rather than upgrading that sample to production status by inference.

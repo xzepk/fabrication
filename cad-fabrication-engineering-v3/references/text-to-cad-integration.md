@@ -1,31 +1,37 @@
-# text-to-cad / cadgen integration
+# Controlled external CAD runtime integration (v3.4 local review build)
 
-Use the installed text-to-cad/cadgen skill files as the runtime source of truth. At the time this package was reviewed, upstream `latest` used a cadgen 0.7.x release line; do not hard-code an old interface if the installed skill has migrated.
+## What is actually connected
 
-When cadgen/build123d is available, it is the preferred CAD/documentation runtime:
+`cadfab_v3.backends.provider` invokes an installed runtime through a selected Python executable, with argument arrays, isolated import paths and a timeout. It does not bundle cadgen, build123d, CadQuery, OCP, viewer assets or runtime source.
 
-- map one maintained Geometry IR configuration to one parameterless build123d model entrypoint;
-- emit STEP as the saved geometry artifact;
-- measure and validate geometry from the model, not from screenshots;
-- project engineering views from the part/assembly geometry, including hidden lines where useful;
-- import shared model facts into drawing code rather than retyping dimension values;
-- use standard drawing scales, title blocks and overlap diagnostics;
-- create DXF cut/flat geometry from actual planar model geometry;
-- generate and review at least one snapshot after visible STEP geometry changes;
-- edit source/IR and regenerate rather than patching final STEP/DXF/PDF bytes.
+- `cadquery` (default): existing compatibility B-Rep builder and STEP exporter.
+- `build123d`: generated parameterless model source, `Box`/`Compound` and `build123d.export_step` in the selected external interpreter. Verified adapter versions: 0.10.0 and 0.11.1.
+- `cadgen`: generated parameterless `@step(out=...)` entrypoint, `from cadgen import build123d as bd`, executed through cadgen's real model pipeline. Version 0.7.15 is the currently inspected/pinned public API. Changing that pin requires revalidation, not an automatic upgrade.
+- `auto`: explicitly permits availability selection in cadgen → build123d → CadQuery order. A selected provider's build failure never changes provider. Explicit provider selection never falls back.
 
-## Compatibility backend
+The default is deliberately compatibility-preserving. Installing a package alone does not change an existing project's provider. Record backend and external Python in `cad_runtime` or use CLI flags. The runner imports the selected provider's saved STEP back through CadQuery/OCP and passes that shape to the drawing layer. Drawings therefore derive from the saved selected-provider artifact, not a separately regenerated model.
 
-The included CadQuery/OCP path implements the same conceptual contract:
+## Verified scope and fail-closed limits
 
-- CadQuery/OCP builds the B-Rep/STEP;
-- OCCT HLR projects visible/hidden engineering view linework from that B-Rep;
-- ReportLab lays controlled A3 document sheets around those projected views;
-- ezdxf writes 1:1 engineering projection DXF with semantic layers;
-- the runner re-opens STEP/PDF/DXF for QA.
+All three adapters implement the same limited canonical IR: positive rectangular nominal sheet solids in XY/XZ, in mm, with one explicit occurrence per part. They do not turn natural language or raw DWG into verified engineering decisions. Production status, fabrication solids, undeclared part features, unsupported geometry fields, and requested sections/curves/unfolding fail before delivery. Adding another exporter does not validate nodes, folds, structural adequacy, connections, drainage, or purchase quantities.
 
-This makes drawing quality independent of whether cadgen happens to be available on a particular workstation.
+The engineering-document implementation remains this skill's OCCT HLR + ReportLab/PyMuPDF + ezdxf path. Upstream `cadgen.eng_drawing` emits PDF only and currently has no sections, details or auxiliary views. This adapter does not claim to call that PDF API or to gain a complete DXF/section engineering system by installing cadgen. The nominal-face DXF remains reference-only.
 
-## Important limit
+Every selected-provider STEP is re-opened and checked for valid solids, exact count, each solid's placement and dimensions, and volume against the canonical IR. This is geometry verification for the declared nominal adapter, not production qualification. Manifest provenance records requested/selected provider, availability failures, interpreter, package versions/module origin, adapter contract, generated source hash and actual STEP hash. `production_qualified` is always false.
 
-The preferred cadgen engineering-drawing layer currently focuses on orthographic/document views and does not replace domain-specific façade sections, node details or sheet-metal unfolding logic. Those remain explicit project/domain responsibilities in this skill.
+## Installation and repeatable validation
+
+See [External runtime setup](runtime-setup.md). Keep environments outside the skill package. The compatibility/drawing interpreter and the cadgen interpreter are separate: current cadgen requires build123d 0.11.1 and OCP 7.9, while older CadQuery environments may use OCP 7.8. The artifact boundary is STEP, not mixing two incompatible OCP installations in one process.
+
+Do not install a runtime automatically at project-run time. Use trusted registry/vendor installation under the user's authorization; check licensing for the environment. Setup does not edit the upstream plugin, its skills or its runtime internals.
+
+`SOURCE/<project>.py` in an external-provider delivery is the exact parameterless entrypoint; its input is sibling `geometry_ir.json`. Treat both as provenance, edit project configuration and regenerate into a new directory. The runner refuses an existing output directory and existing output STEP, keeps an exact configuration snapshot and hash, and checks that the original configuration was not changed during execution.
+
+## Upstream sources inspected
+
+- [earthtojake/text-to-cad](https://github.com/earthtojake/text-to-cad), MIT; PyPI distribution `cadgen==0.7.15`.
+- [CAD model contract](https://github.com/earthtojake/text-to-cad/blob/main/skills/cad/references/step-generation.md): parameterless decorated models, source execution and external runtime store.
+- [Engineering drawing skill](https://github.com/earthtojake/text-to-cad/blob/main/skills/engineering-drawing/SKILL.md): PDF-only output and projection limitations.
+- [Runtime metadata](https://github.com/earthtojake/text-to-cad/blob/main/packages/cadgen/pyproject.toml): Python >=3.11, cadgen 0.7.15, build123d >=0.11.1,<0.12, cadquery-ocp-novtk >=7.9,<8.
+
+Local test provenance must distinguish import/kernel readiness from decorated export acceptance. In the managed review environment, cadgen's kernel probe succeeds but its required local IPC broker socket is denied (`PermissionError: Operation not permitted`), including a scoped escalated attempt. The integration test records this as BLOCKED/SKIPPED, not a successful cadgen export. CadQuery and both tested build123d versions execute real STEP exports and readback checks here. A deployment must run the cadgen export test successfully before treating that provider as locally accepted.

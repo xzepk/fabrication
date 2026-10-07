@@ -1,0 +1,51 @@
+[
+  {
+    "id": "P-001",
+    "kind": "panel",
+    "geometry": {
+      "type": "planar_plate",
+      "width_mm": 1200,
+      "height_mm": 2400,
+      "thickness_mm": 3.0
+    },
+    "material": {
+      "name": "aluminum",
+      "grade": "3003-H24",
+      "density_kg_m3": 2730
+    },
+    "quantity": 2,
+    "source": {
+      "drawing_sha256": "DEMO",
+      "entity_handles": [
+        "DEMO-P001"
+      ],
+      "layer": "DEMO"
+    },
+    "display_label": "东立面铝板 P-001"
+  },
+  {
+    "id": "M-001",
+    "kind": "member",
+    "geometry": {
+      "type": "rect_tube",
+      "width_mm": 80,
+      "height_mm": 120,
+      "wall_mm": 4,
+      "length_mm": 3000
+    },
+    "material": {
+      "name": "steel",
+      "grade": "Q235B",
+      "density_kg_m3": 7850
+    },
+    "quantity": 3,
+    "source": {
+      "drawing_sha256": "DEMO",
+      "entity_handles": [
+        "DEMO-M001"
+      ],
+      "layer": "DEMO"
+    },
+    "display_label": "钢矩形管 M-001"
+  }
+]

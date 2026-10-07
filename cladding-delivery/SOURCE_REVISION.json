@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/xzepk/fabrication",
+  "base_commit": "4c7fa8c1bb8296bde8889a905eb013e4960f3410",
+  "skill": "cladding-delivery",
+  "version": "3.1.0",
+  "review_build": true,
+  "published": false,
+  "manufacturing_qualified": false,
+  "runtime_policy": "External installation only; no runtime or font binaries bundled"
+}

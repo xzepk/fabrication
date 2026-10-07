@@ -1,8 +1,12 @@
 using System.Collections;
 using System.Reflection;
 using System.Text.Json;
+using System.Text;
+using System.Security.Cryptography;
 using ACadSharp;
 using ACadSharp.IO;
+
+Console.OutputEncoding = new UTF8Encoding(false);
 
 if (args.Length != 2 || args[0] != "inspect")
 {
@@ -36,7 +40,13 @@ foreach (var entity in doc.Entities)
 
 var payload = new {
     adapter = "acadsharp",
+    library = typeof(CadDocument).Assembly.GetName().Version?.ToString(),
+    success = true,
     file,
+    sha256 = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(file))).ToLowerInvariant(),
+    canonical_level = "INSPECTION_ONLY",
+    production_geometry_ready = false,
+    limitation = "Model-space entity inventory only. Nested block and XRef transforms, dimension semantics, unknown objects and production geometry have not been verified.",
     entity_count = doc.Entities.Count(),
     entity_types = counts,
     layers,

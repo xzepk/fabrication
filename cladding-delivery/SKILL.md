@@ -1,9 +1,9 @@
 ---
 name: cladding-delivery
-description: Windows/Linux 工程包覆与幕墙深化总控 Skill。面向建筑包柱、包梁、幕墙铝板、金属装饰板等场景，将 DWG/DXF 解析、方案确认、参数化三维建模、复尺回填、板件展开、套料、BOM 和交付检查串成可追溯流程。默认使用 ACadSharp + CadQuery/OCP(OpenCascade)，Rhino 仅作为可选增强 Geometry Provider；不通过 UI 自动化控制 CAD 软件，不把未验证结果直接作为生产下单依据。
+description: Windows/Linux 工程包覆与幕墙深化总控 Skill。面向建筑包柱、包梁、幕墙铝板、金属装饰板等场景，将 DWG/DXF 解析、方案确认、参数化三维建模、复尺回填、板件展开、套料、BOM 和交付检查串成可追溯流程。默认使用 ACadSharp + CadQuery/OCP(OpenCascade)，build123d / Rhino 仅作为可选增强 Geometry Provider；不通过 UI 自动化控制 CAD 软件，不把未验证结果直接作为生产下单依据。
 compatibility: Windows 10/11/Server or Linux; Python >=3.11,<3.15. Direct DWG parsing requires .NET 8+ and the bundled ACadSharp helper (or a compatible external adapter). CadQuery/OCP is the default geometry backend. Rhino is optional and is never a hard dependency.
 metadata:
-  version: "3.0.0"
+  version: "3.1.0"
   domain: "aec-fabrication"
   geometry-default: "occt"
 ---
@@ -26,7 +26,9 @@ metadata:
 ## 核心架构约束
 
 - 默认 Geometry Provider 为 `occt`：CadQuery → OCP → OpenCascade。
-- `rhino` 仅为可选增强 Provider；没有 Rhino 时主流程必须仍可工作。
+- `build123d` 是独立可选的确定性建模 Provider；`rhino` 是可选外部 Provider。无二者时 OCCT 主流程仍可工作。
+- 此 Skill 独立运行，不导入、调用或依赖另一个 CAD 处理 Skill；共享依赖库安装在外部 runtime。
+- text-to-cad/cadgen 只能通过 `proposal-import` 提交数据型 canonical JSON 候选，人工审查后显式导入；不运行任意生成代码。
 - 不依赖 FreeCAD、SheetMetal、ODA、AutoCAD UI 自动化。
 - 直接 DWG 默认由 ACadSharp 适配器读取；DXF/ezdxf 为显式 DXF 或调试路径。
 - Parser 和 Geometry Provider 必须通过 canonical schema 解耦；下游不得消费 SDK 私有对象。
@@ -35,13 +37,14 @@ metadata:
 
 ## 当前实现范围
 
-| 能力 | v3.0.0 状态 |
+| 能力 | v3.1.0 状态 |
 |---|---|
 | Windows/Linux 项目初始化、doctor、快照、人工确认、断点运行、交付打包 | 已实现 |
 | DWG 直接读取 | 已提供 ACadSharp .NET 8 helper 源码与适配器；需在目标环境构建 |
 | DXF 清点 | 已实现 ezdxf adapter |
 | canonical component/panel schema | 已实现 |
-| OCCT Provider | 已实现基础平板、矩形型材建模与 STEP/STL 导出 |
+| OCCT / 可选 build123d Provider | 已实现基础平板、开口矩形管建模与 STEP/STL 导出；真实 STEP 回读验收 |
+| text-to-cad/cadgen 候选 | 已实现 data-only JSON 暂存/能力检查；未安装或执行 cadgen |
 | 平面板展开 | 已实现无折弯 planar plate 的 1:1 DXF |
 | 基础矩形套料 | 已实现 REVIEW 级 shelf nesting；不可替代工厂 CAM 套料 |
 | BOM | 已实现基础板件/型材理论量计算 |
@@ -85,12 +88,14 @@ python <skill>/scripts/run.py --project <project> package --run-id <run-id>
 2. 保留原始 DWG/DXF，不覆盖输入；记录 SHA256、解析器版本和所有阻断警告。
 3. `doctor` 必须先验证 Python、CadQuery/OCP、DXF adapter、ACadSharp helper（若处理 DWG）和当前 Geometry Provider。
 4. DWG 解析发生不支持对象、proxy、XRef、字体、动态块或异常通知时，必须进入 `issues.json`，不得静默丢弃。
-5. 从图纸到工程对象的语义映射必须有来源证据。v3.0.0 内置 DWG helper 负责清点，不宣称自动理解所有构件；使用项目映射/专项解析器形成 canonical components 后再 `components-import`。图层/块名可作为证据，但不能作为唯一真值。
+5. 从图纸到工程对象的语义映射必须有来源证据。v3.1.0 内置 DWG helper 负责清点，不宣称自动理解所有构件；使用项目映射/专项解析器形成 canonical components 后再 `components-import`。图层/块名可作为证据，但不能作为唯一真值。
 6. HUMAN GATE A 必须覆盖包覆范围、材料/厚度、节点、分缝/分板、必要加工规则及假设。
 7. 预览允许生成模型、工程预览、初步 BOM 和异常报告；不得标记为生产放行。
 8. 复尺值要与设计值并存，记录采用值和依据。复尺变化必须使受影响下游产物失效并重算。
 9. `remeasured` 模式同时要求当前快照有效的 `scope` 与 `survey` 确认。
-10. 输出的 STEP/DXF/BOM/套料结果都要进入 run manifest，并记录 provider、版本、输入快照和 REVIEW 状态。
+10. 输出的 STEP/DXF/BOM/套料结果都要进入 run manifest，并记录 provider、版本、输入快照、工件真实回读结果、文件 SHA256 和 REVIEW 状态。
+11. 文件名和 DXF 标识使用稳定 ASCII machine_id；原始中文 ID/标签在 label_map.json 与 UTF-8 BOM 中完整保留。跨平台名称冲突必须阻断，禁止靠替换字符静默合并。
+12. 任何非空孔、折弯、异形轮廓、未知几何字段必须在导出前阻断；确认或候选导入不能扩展未实现能力。
 
 ## Geometry Provider 选择
 
@@ -103,7 +108,7 @@ geometry:
   absolute_tolerance_mm: 0.1
 ```
 
-`occt` 必须优先用于普通平板、规则型材和已验证参数化构件。只有当项目明确需要并配置了外部 Rhino adapter 时，才允许：
+`occt` 默认用于普通矩形平板与尖角理想化矩形管。项目可显式选择 `build123d`，安装对应 optional extra 后运行同样的受控模板与 STEP 回读验收。详见 `references/providers.md`。只有当项目明确需要并配置了外部 Rhino adapter 时，才允许：
 
 ```yaml
 geometry:
@@ -122,6 +127,7 @@ Rhino provider 契约见 `references/adapters.md`。Skill 不保存 Rhino 商业
 
 ## 按需读取
 
+- `references/providers.md`：受控 build123d/text-to-cad/cadgen 边界、真实几何验收与 Rhino 契约。
 - `references/architecture.md`：模块边界与数据流。
 - `references/data-contract.md`：canonical component/panel 数据约定。
 - `references/adapters.md`：ACadSharp、OCCT、Rhino、fabrication、nesting provider 契约。
@@ -135,9 +141,9 @@ Rhino provider 契约见 `references/adapters.md`。Skill 不保存 Rhino 商业
 
 ```bash
 python <skill>/scripts/validate_skill.py <skill>
-PYTHONPATH=<skill>/src python -m pytest -q <skill>/tests
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=<skill>/src python -m pytest -p no:cacheprovider -q <skill>/tests --basetemp=<external-test-dir>
 python <skill>/scripts/run.py --project <temp-project> init
 python <skill>/scripts/run.py --project <temp-project> doctor
 ```
 
-Skill 包中不得包含 Rhino、ODA 或其他不可再分发商业运行时/许可证文件。
+Skill 包中不得包含 Python 虚拟环境、依赖库、原生二进制、构建产物、测试输出、Rhino/ODA 运行时或许可证文件。安装与依赖均使用 `references/operations.md` 的外部 runtime。Windows 脚本提供但未在本次 Linux 验证中执行，不宣称生产验收。

@@ -1,31 +1,51 @@
-# Windows / Linux Operations
+# Windows / Linux operations
 
-## Python
+## External runtime only
 
-推荐 Python 3.11–3.13，使用独立虚拟环境。
+Keep the skill directory source-only. Use Python 3.11–3.13 with compatible native wheels in an external virtual environment. Tested versions for the current local run are recorded in the validation report; dependency ranges are not a Windows certification.
+
+Linux:
 
 ```bash
-pip install -e .
+CLADDING_VENV="$HOME/.local/share/cladding-delivery/venv" CLADDING_EXTRAS=build123d,test bash <skill>/scripts/setup_linux.sh
 ```
 
-## Windows
+Windows PowerShell (provided, not executed in Linux validation):
 
-- Python 64-bit
-- .NET 8 SDK（只有直接 DWG ACadSharp helper 需要）
-- 构建 `native/acadsharp-dump`
-- 设置 `CADFAB_ACADSHARP_DUMP`
+```powershell
+& <skill>\scripts\setup_windows.ps1 -Venv "$env:LOCALAPPDATA\cladding-delivery\venv" -Extras "build123d,test"
+```
 
-## Linux
+Both scripts reject a runtime inside the skill, reuse an existing virtual environment, and install from an external temporary source copy to keep build metadata out of the skill. They install CadQuery, ezdxf, PyYAML and jsonschema; build123d and pytest are optional extras. `scripts/run.py` uses source directly, so invoke it with the external environment's Python. Do not copy site-packages, native DLL/SO/PYD files, license files, outputs, caches, or a virtual environment into the skill. The source `native/acadsharp-dump/` is allowed; build its outputs elsewhere.
 
-- Python 64-bit
-- glibc 较新的主流发行版
-- .NET 8 SDK/runtime（直接 DWG helper 需要）
-- CadQuery/OCP wheel 必须与 Python/架构匹配
+## DWG runtime
 
-## 恢复
+Only direct DWG inspection needs .NET 8 SDK/runtime plus ACadSharp. DXF inspection and model-driven workflows do not. Copy the helper source to a separate build directory and publish from there:
 
-项目运行数据永远写在 `<project>`，不写 Skill 自身目录。每次 run 都创建独立 run-id，不覆盖旧产物。输入或 config 变化后重新 `snapshot`；旧确认不会自动迁移到新快照。
+```bash
+mkdir -p <runtime>/acadsharp-src
+cp <skill>/native/acadsharp-dump/ACadSharpDump.csproj <skill>/native/acadsharp-dump/Program.cs <runtime>/acadsharp-src/
+dotnet publish <runtime>/acadsharp-src/ACadSharpDump.csproj -c Release -o <runtime>/acadsharp-bin
+export CADFAB_ACADSHARP_DUMP=<runtime>/acadsharp-bin/ACadSharpDump
+```
 
-## Provider 切换
+Windows: perform the equivalent `Copy-Item` and `dotnet publish`, then set `CADFAB_ACADSHARP_DUMP` to the external `.exe`. Keep .NET runtime/native builds out of the skill. A Windows parser/provider run, Rhino service, ODA conversion, physical samples and shop-floor CAM validation are separate acceptance stages; do not call them passed after Linux tests.
 
-修改项目 `config/project.yaml` 后重新 snapshot。生产过程中禁止“OCCT 失败就自动切 Rhino”或反向静默回退。
+ODA is optional and never required. No automatic ODA installation or conversion fallback is provided. If a project separately authorizes a conversion, retain the original DWG, record converter/version/settings and output hashes, then inspect the resulting DXF with an explicit conversion provenance record. CAD applications and their commercial runtimes are not bundled.
+
+## Recovery and switching providers
+
+All projects/runs/proposals remain outside the skill. Runs have fresh IDs and refuse existing output names. Input/config changes invalidate human confirmations; obtain confirmations for the new snapshot. A provider change is explicit configuration and never an automatic error fallback.
+
+`run` returns 2 when any geometry/unfold/nesting blocker remains while preserving its REVIEW report. `verify` returns 2 for missing/corrupt/unacceptable artifacts. Geometric verification does not release production. Packaging a run with recorded unsupported components is allowed only as an explicitly marked REVIEW issue package, never a complete manufacturing set.
+
+## Tests
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=<skill>/src <runtime>/venv/bin/python -m pytest -p no:cacheprovider <skill>/tests --basetemp=<external-validation>/tmp
+PYTHONDONTWRITEBYTECODE=1 python <skill>/scripts/validate_skill.py <skill>
+```
+
+Use external test output directories. Refresh `MANIFEST.sha256` after source changes; it lists package files only and excludes itself.
+
+The installed `cladding-delivery` console entry includes config/schema resources under the environment share directory. Validate both source invocation and installed console commands when changing packaging.

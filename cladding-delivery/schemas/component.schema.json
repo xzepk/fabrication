@@ -2,23 +2,137 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Canonical Engineering Component",
   "type": "object",
-  "required": ["id", "kind", "geometry", "material", "source"],
+  "required": [
+    "id",
+    "kind",
+    "geometry",
+    "material",
+    "source"
+  ],
   "properties": {
-    "id": {"type": "string", "minLength": 1},
-    "kind": {"enum": ["panel", "member", "custom"]},
-    "quantity": {"type": "integer", "minimum": 1, "default": 1},
-    "geometry": {"type": "object", "required": ["type"]},
-    "material": {"type": "object", "required": ["name"]},
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "enum": [
+        "panel",
+        "member",
+        "custom"
+      ]
+    },
+    "quantity": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 1
+    },
+    "geometry": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "width_mm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height_mm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "thickness_mm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "wall_mm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "length_mm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "planar_plate"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "width_mm",
+              "height_mm",
+              "thickness_mm"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "rect_tube"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "width_mm",
+              "height_mm",
+              "wall_mm",
+              "length_mm"
+            ]
+          }
+        }
+      ]
+    },
+    "material": {
+      "type": "object",
+      "required": [
+        "name"
+      ]
+    },
     "source": {
       "type": "object",
-      "required": ["drawing_sha256"],
+      "required": [
+        "drawing_sha256"
+      ],
       "properties": {
-        "drawing_sha256": {"type": "string"},
-        "entity_handles": {"type": "array", "items": {"type": "string"}},
-        "layer": {"type": ["string", "null"]},
-        "block_path": {"type": "array", "items": {"type": "string"}},
-        "transform_chain": {"type": "array"}
+        "drawing_sha256": {
+          "type": "string"
+        },
+        "entity_handles": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "layer": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "block_path": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "transform_chain": {
+          "type": "array"
+        }
       }
+    },
+    "display_label": {
+      "type": "string",
+      "description": "Original human label; preserved in UTF-8 maps/BOM, never used as a CAD filename."
     }
   },
   "additionalProperties": true

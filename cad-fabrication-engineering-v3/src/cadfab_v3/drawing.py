@@ -3,57 +3,18 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Iterable
-import os
 
 import ezdxf
 from ezdxf.enums import TextEntityAlignment
 from reportlab.lib.pagesizes import A3, landscape
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.cidfonts import UnicodeCIDFont
-from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 
 from .backends.cadquery_backend import build_shape
 from .projection import ProjectedView, standard_views
 
-# Cross-platform CJK font discovery. Font files are NOT bundled in the skill.
-# Prefer an embeddable system font for viewer-stable engineering PDFs; fall back
-# to a standard CID font only when the workstation has no usable TTF/TTC.
-def _register_cjk_font():
-    candidates = []
-    env_font = os.environ.get("CADFAB_CJK_FONT")
-    if env_font:
-        candidates.append(Path(env_font))
-    candidates += [
-        Path("/usr/share/fonts/truetype/arphic-gbsn00lp/gbsn00lp.ttf"),
-        Path("/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"),
-        Path("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc"),
-        Path("C:/Windows/Fonts/Deng.ttf"),
-        Path("C:/Windows/Fonts/simhei.ttf"),
-        Path("C:/Windows/Fonts/msyh.ttc"),
-        Path("C:/Windows/Fonts/simsun.ttc"),
-    ]
-    for path in candidates:
-        if not path.exists():
-            continue
-        # TTC collections may expose different usable subfonts. Try a small
-        # bounded set; ordinary TTF ignores all but index 0.
-        max_idx = 5 if path.suffix.lower() == ".ttc" else 1
-        for idx in range(max_idx):
-            try:
-                name = "CADFAB-CJK"
-                pdfmetrics.registerFont(TTFont(name, str(path), subfontIndex=idx))
-                return name, True, str(path)
-            except Exception:
-                continue
-    try:
-        pdfmetrics.registerFont(UnicodeCIDFont("STSong-Light"))
-        return "STSong-Light", False, "standard CID fallback"
-    except Exception:
-        return "Helvetica", False, "no CJK font available"
-
-CN_FONT, CN_FONT_EMBEDDED, CN_FONT_SOURCE = _register_cjk_font()
+from .labels import LabelPolicy
 
 PAGE_W_PT, PAGE_H_PT = landscape(A3)
 PAGE_W_MM, PAGE_H_MM = PAGE_W_PT / mm, PAGE_H_PT / mm
@@ -99,6 +60,21 @@ def _setup_doc():
     return doc
 
 
+def _sanitize_dxf_labels(doc, policy):
+    # Walk the entity database, including anonymous dimension blocks.
+    for entity in doc.entitydb.values():
+        if not entity.is_alive:
+            continue
+        if entity.dxftype() in {"TEXT", "ATTRIB", "ATTDEF"}:
+            entity.dxf.text = policy.ascii(entity.dxf.text, context="dxf")
+            entity.dxf.style = "Standard"
+        elif entity.dxftype() == "MTEXT":
+            entity.text = policy.ascii(entity.plain_text(), context="dxf")
+            entity.dxf.style = "Standard"
+    doc.styles.get("Standard").dxf.font = "txt"
+    doc.styles.get("Standard").dxf.bigfont = ""
+
+
 def _add_dim_linear(msp, p1, p2, base, angle=0, override=None):
     d = msp.add_linear_dim(base=base, p1=p1, p2=p2, angle=angle, dimstyle="CADFAB_DIM", dxfattribs={"layer": "A-DIM"})
     if override:
@@ -116,7 +92,7 @@ def _draw_dxf_view(msp, view: ProjectedView, offset=(0.0, 0.0)):
             msp.add_lwpolyline([(x + ox, y + oy) for x, y in line], dxfattribs={"layer": "A-VIEW-VISIBLE"})
 
 
-def engineering_dxf(ir: dict, out: Path) -> dict:
+def engineering_dxf(ir: dict, out: Path, *, shape=None) -> dict:
     """1:1 model-space engineering linework with semantic layers.
 
     The PDF is the controlled document sheet. This DXF intentionally keeps
@@ -132,10 +108,20 @@ def engineering_dxf(ir: dict, out: Path) -> dict:
     n = int(g["bay_count"])
     bands = [float(x) for x in g["top_depth_bands"]]
 
-    shape = build_shape(ir)
+    shape = build_shape(ir) if shape is None else shape
     views = standard_views(shape)
     doc = _setup_doc()
+    policy = LabelPolicy(ir, pdf_unicode=False)
     msp = doc.modelspace()
+
+    msp.add_text("PROJECT: " + policy.ascii(ir["project"], context="project"), height=180,
+                 dxfattribs={"layer": "A-TEXT"}).set_placement((0, top_depth + 2000))
+    for part in ir["parts"]:
+        if part["orientation"] == "XY":
+            loc = (part["x"] + part["width"] / 2, part["y"] + part["height"] / 2)
+        else:
+            loc = (part["x"] + part["width"] / 2, -3500 + part["z"] + part["height"] / 2)
+        msp.add_text(policy.part_ids[str(part["id"])], height=65, dxfattribs={"layer": "A-TEXT"}).set_placement(loc, align=TextEntityAlignment.MIDDLE_CENTER)
 
     # Reference envelope and projected model-space views.
     _draw_dxf_view(msp, views["top"], (0, 0))
@@ -169,13 +155,17 @@ def engineering_dxf(ir: dict, out: Path) -> dict:
         _add_dim_linear(msp, (0, y), (0, y + dep), (-700, y), 90, f"{dep:.0f}")
         y += dep
 
+    # Even Unicode source identifiers have one stable, portable ASCII CAD mark.
+    _sanitize_dxf_labels(doc, policy)
     out.parent.mkdir(parents=True, exist_ok=True)
     doc.saveas(out)
+    policy.write_sidecar(out)
     return {
         "modelspace_1_to_1": True,
         "views": ["plan", "front", "end_profile"],
         "semantic_layers": sorted(LAYER_SPECS),
         "entity_count": len(msp),
+        "label_mapping": policy.metadata(),
     }
 
 
@@ -189,6 +179,7 @@ def reference_blank_dxf(ir: dict, out: Path) -> dict:
     if ir.get("status") == "PRODUCTION_CANDIDATE" and not ir["metrics"].get("flat_pattern_released"):
         raise RuntimeError("PRODUCTION_CANDIDATE cannot emit a reference blank layout in place of a true flat pattern")
     doc = _setup_doc()
+    policy = LabelPolicy(ir, pdf_unicode=False)
     msp = doc.modelspace()
     groups = _panel_groups(ir)
     x, y = 0.0, 0.0
@@ -201,9 +192,12 @@ def reference_blank_dxf(ir: dict, out: Path) -> dict:
         msp.add_text(f"NOMINAL FACE {w:.3f} x {h:.3f} x {row['thickness']:.1f}; QTY {row['qty']}", height=65, dxfattribs={"layer": "A-TEXT"}).set_placement((x + w/2, y + h/2 - 40), align=TextEntityAlignment.MIDDLE_CENTER)
         msp.add_text("REFERENCE ONLY - NOT FLAT PATTERN / NOT NESTING", height=60, dxfattribs={"layer": "A-WARNING"}).set_placement((x + w/2, y - 120), align=TextEntityAlignment.MIDDLE_CENTER)
         x += w + gap
+    # Even Unicode source identifiers have one stable, portable ASCII CAD mark.
+    _sanitize_dxf_labels(doc, policy)
     out.parent.mkdir(parents=True, exist_ok=True)
     doc.saveas(out)
-    return {"reference_only": True, "type_count": len(groups), "flat_pattern_released": False, "entity_count": len(msp)}
+    policy.write_sidecar(out)
+    return {"reference_only": True, "type_count": len(groups), "flat_pattern_released": False, "entity_count": len(msp), "label_mapping": policy.metadata()}
 
 
 def _panel_groups(ir: dict) -> list[dict]:
@@ -224,21 +218,63 @@ def _set_line_mm(c, width_mm: float):
     c.setLineWidth(width_mm * mm)
 
 
-def _text(c, x_mm, y_mm, text, size=2.5, font=CN_FONT, align="left"):
-    c.setFont(font, size * mm)
-    x, y = x_mm * mm, y_mm * mm
-    if align == "center":
-        c.drawCentredString(x, y, str(text))
-    elif align == "right":
-        c.drawRightString(x, y, str(text))
+def _text(c, x_mm, y_mm, text, size=2.5, font="Helvetica", align="left", max_width_mm=None):
+    policy = c._cadfab_labels
+    display, unicode_overlay = policy.pdf(text)
+    size_pt = size * mm
+    if unicode_overlay:
+        import fitz
+        if not hasattr(policy, "_measure_font"):
+            policy._measure_font = fitz.Font(fontbuffer=policy.font.buffer)
+        width = policy._measure_font.text_length(display, fontsize=size_pt)
     else:
-        c.drawString(x, y, str(text))
+        width = pdfmetrics.stringWidth(display, font, size_pt)
+    if max_width_mm is None:
+        max_width_mm = (PAGE_W_MM - 12 - x_mm) if align == "left" else None
+    if max_width_mm and width > max_width_mm * mm:
+        adjusted = size_pt * max_width_mm * mm / width
+        if adjusted < 4.0:
+            policy.fit_issues.append({"text": display, "required_size_pt": round(adjusted, 3), "page": c.getPageNumber()})
+        size_pt = adjusted
+        width = max_width_mm * mm
+    x, y = x_mm * mm, y_mm * mm
+    if align == "center": x -= width / 2
+    elif align == "right": x -= width
+    if unicode_overlay:
+        policy.overlays.append({"page": c.getPageNumber(), "x": x, "y": PAGE_H_PT-y, "text": display, "size": size_pt})
+    else:
+        c.setFont(font, size_pt)
+        c.drawString(x, y, display)
 
 
 def _label(c, x_mm, y_mm, no, zh, en, scale=None):
-    _text(c, x_mm, y_mm, f"{no}  {zh} / {en}", 2.65)
+    policy = c._cadfab_labels
+    raw = f"{no}  {zh} / {en}"
+    if not policy.font or not policy.font.supports(raw):
+        # An explicit English heading is more useful than duplicate translation.
+        policy._record(raw, f"{no}  {en}", "pdf", True)
+        raw = f"{no}  {en}"
+    _text(c, x_mm, y_mm, raw, 2.65, max_width_mm=69 if scale else None)
     if scale:
         _text(c, x_mm + 72, y_mm, f"SCALE {scale}", 2.2, "Helvetica")
+
+
+def _wrapped_lines(c, raw, width_mm, size_mm):
+    display, overlay = c._cadfab_labels.pdf(raw)
+    if overlay:
+        import fitz
+        font = fitz.Font(fontbuffer=c._cadfab_labels.font.buffer)
+        measure = lambda value: font.text_length(value, fontsize=size_mm*mm)
+    else:
+        measure = lambda value: pdfmetrics.stringWidth(value, "Helvetica", size_mm*mm)
+    lines, line = [], ""
+    for char in display:
+        if line and measure(line + char) > width_mm*mm:
+            lines.append(line)
+            line = ""
+        line += char
+    if line: lines.append(line)
+    return lines
 
 
 def _arrow(c, x_mm, y_mm, direction: str, size=1.3):
@@ -358,8 +394,8 @@ def _assumption_lines(ir: dict, limit=5):
     return out
 
 
-def engineering_pdf(ir: dict, out: Path) -> dict:
-    shape = build_shape(ir)
+def engineering_pdf(ir: dict, out: Path, *, shape=None) -> dict:
+    shape = build_shape(ir) if shape is None else shape
     views = standard_views(shape)
     g = ir["geometry"]
     L = float(g["overall_length"])
@@ -375,6 +411,7 @@ def engineering_pdf(ir: dict, out: Path) -> dict:
 
     out.parent.mkdir(parents=True, exist_ok=True)
     c = canvas.Canvas(str(out), pagesize=landscape(A3), invariant=1, pageCompression=1)
+    c._cadfab_labels = LabelPolicy(ir)
     c.setTitle(ir["project"])
     c.setAuthor("cad-fabrication-engineering-v3")
     sheet_count = 3
@@ -494,7 +531,7 @@ def engineering_pdf(ir: dict, out: Path) -> dict:
     for r, row in enumerate(groups, 1):
         y = table_top-r*row_h-7.3
         vals = [row["type"], row["kind"], f"{row['width']:.3f}", f"{row['height']:.3f}", f"{row['thickness']:.1f}", str(row["qty"]), f"{row['area_m2']:.3f}", material.get("grade", "TBC"), material.get("finish", "TBC"), "NOMINAL FACE / NO FLAT"]
-        for i, val in enumerate(vals): _text(c, (cols[i]+cols[i+1])/2, y, val, 1.62, "Helvetica", "center")
+        for i, val in enumerate(vals): _text(c, (cols[i]+cols[i+1])/2, y, val, 1.62, "Helvetica", "center", max_width_mm=cols[i+1]-cols[i]-2)
 
     # Mark matrix: 14 bays x (3 top bands + fascia) = all 56 marks, no silent truncation.
     _label(c, 18, 211, "02", "完整板件编号矩阵", "COMPLETE PANEL MARK MATRIX")
@@ -526,7 +563,7 @@ def engineering_pdf(ir: dict, out: Path) -> dict:
         for p in parts:
             rendered_marks.add(p["id"])
             x = matrix_x0+label_w+(p["bay"]-.5)*cell_w
-            _text(c, x, y, p["id"], 1.45, "Helvetica", "center")
+            _text(c, x, y, p["id"], 1.45, "Helvetica", "center", max_width_mm=cell_w-1.5)
     _text(c, 18, 138.5, f"MARK COVERAGE: {len(rendered_marks)}/{len(ir['parts'])} - COMPLETE", 2.0, "Helvetica-Bold")
 
     # Material / metrics and hard release gates.
@@ -552,10 +589,11 @@ def engineering_pdf(ir: dict, out: Path) -> dict:
     blockers += ["现场复尺尚未回填。" if not ir.get("release_gates",{}).get("survey_applied",False) else "现场复尺已回填。"]
     yy = by+bh-7
     for line in blockers[:6]:
-        # Keep blockers readable: hard-wrap concise statements to two rows maximum.
-        text_line = str(line)
-        chunks = [text_line[i:i+42] for i in range(0, len(text_line), 42)][:2]
+        # Translate before width-aware wrapping; never silently truncate source notes.
+        chunks = _wrapped_lines(c, str(line), bw-12, 1.85)
         for ci, chunk in enumerate(chunks):
+            if yy < by+3:
+                c._cadfab_labels.fit_issues.append({"text": str(line), "reason": "blocker_box_overflow", "page": c.getPageNumber()})
             _text(c, bx+4, yy, ("- " if ci == 0 else "  ") + chunk, 1.85)
             yy -= 4.8
         yy -= 1.1
@@ -588,6 +626,8 @@ def engineering_pdf(ir: dict, out: Path) -> dict:
     ]
     for i, line in enumerate(boundary): _text(c, 18, 139-i*7.0, f"{i+1}. {line}", 1.85, "Helvetica")
     c.showPage(); c.save()
+    c._cadfab_labels.embed_overlays(out)
+    c._cadfab_labels.write_sidecar(out)
 
     return {
         "sheet_count": sheet_count,
@@ -596,5 +636,6 @@ def engineering_pdf(ir: dict, out: Path) -> dict:
         "panel_mark_coverage": {"expected": len(ir["parts"]), "rendered": len(rendered_marks), "ratio": round(len(rendered_marks)/max(len(ir["parts"]),1), 6)},
         "flat_pattern_claimed": False,
         "profile_semantic": "NOMINAL_CLADDING_ENVELOPE_NOT_STRUCTURAL_SECTION",
-        "font": {"name": CN_FONT, "embedded_expected": CN_FONT_EMBEDDED, "source": CN_FONT_SOURCE},
+        "font": c._cadfab_labels.metadata()["font"],
+        "label_mapping": c._cadfab_labels.metadata(),
     }

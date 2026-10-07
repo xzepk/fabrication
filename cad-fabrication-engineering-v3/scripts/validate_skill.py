@@ -25,7 +25,7 @@ else:
             meta = yaml.safe_load(fm)
             if meta.get("name") != "cad-fabrication-engineering-v3": errors.append("front matter name mismatch")
             if root.name != meta.get("name"): errors.append(f"package root name must equal skill name: root={root.name} skill={meta.get('name')}")
-            if meta.get("metadata", {}).get("version") != "3.3.0": errors.append("front matter version mismatch")
+            if meta.get("metadata", {}).get("version") != "3.4.0": errors.append("front matter version mismatch")
             if not meta.get("description"): errors.append("description missing")
             if not meta.get("compatibility"): errors.append("compatibility missing")
         except Exception as exc:
@@ -37,6 +37,8 @@ required = [
     "references/architecture.md", "references/text-to-cad-integration.md",
     "references/cad-quality-standard.md", "references/dwg-adapter-contract.md",
     "references/v3.1-review.md", "references/golden-samples.yaml",
+    "references/runtime-setup.md", "src/cadfab_v3/backends/provider.py",
+    "src/cadfab_v3/backends/_external_worker.py", "tests/test_runtime_backends.py",
 ]
 for rel in required:
     if not (root / rel).exists(): errors.append(f"missing {rel}")
@@ -54,9 +56,15 @@ for p in root.rglob("*.py"):
 
 for bad in root.rglob("__pycache__"):
     errors.append(f"package contains __pycache__: {bad.relative_to(root)}")
-for ext in ("*.ttf", "*.otf", "*.woff", "*.woff2"):
+for ext in ("*.ttf", "*.otf", "*.ttc", "*.woff", "*.woff2"):
     for bad in root.rglob(ext):
         errors.append(f"font file must not be bundled: {bad.relative_to(root)}")
+
+for candidate in root.rglob("*"):
+    if candidate.is_dir() and candidate.name in {".venv", "venv", "site-packages", "build", "obj"}:
+        errors.append(f"runtime/build directory must remain external: {candidate.relative_to(root)}")
+    if candidate.is_file() and (candidate.suffix.lower() in {".dll", ".so", ".pyd", ".exe", ".dylib", ".whl", ".nupkg"} or ".so." in candidate.name.lower()):
+        errors.append(f"runtime binary must not be bundled: {candidate.relative_to(root)}")
 
 if errors:
     print("skill validation: FAIL")

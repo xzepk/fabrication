@@ -31,3 +31,11 @@
 ## Survey
 
 设计值、实测值、采用值必须同时保留。采用值必须有 evidence；复尺不能直接覆盖原始设计值。
+
+## Stable labels and portable artifacts
+
+`id` remains the exact original engineering identity (including Unicode) so survey references remain valid. `display_label` optionally preserves the human-facing label. Safe ASCII IDs `[A-Za-z0-9][A-Za-z0-9_-]{0,63}` are retained unless Windows-reserved. Other IDs receive deterministic `C-<24 hexadecimal SHA256 characters>` machine IDs, derived from exact UTF-8 bytes. No transliteration or Unicode normalization is applied. Duplicate original IDs or case-insensitive filename collisions are errors. `label_map.json`, per-component `.identity.json` files and BOM columns preserve original IDs/labels alongside machine IDs. Only machine IDs appear in DXF TEXT and filenames.
+
+Geometry providers accept only documented numeric fields and explicitly empty feature placeholders. Unknown fields or nonempty unsupported features block export rather than disappear. Optional/custom schemas do not expand provider capability. `effective_components.json` records the adopted survey dimensions used in that run; original design dimensions remain in the active source/snapshot.
+
+The original `examples/components.json` is preserved; `examples/components-with-labels.json` separately demonstrates Chinese display labels.

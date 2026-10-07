@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cladding-delivery"
-version = "3.0.0"
+version = "3.1.0"
 description = "Traceable Windows/Linux cladding and curtain-wall engineering workflow with OCCT/CadQuery geometry backend."
 requires-python = ">=3.11,<3.15"
 dependencies = [
@@ -15,7 +15,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=8,<9"]
+test = ["pytest>=8,<10"]
+build123d = ["build123d>=0.10,<0.11"]
 
 [project.scripts]
 cladding-delivery = "cladding_delivery.cli:main"
@@ -25,3 +26,7 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.data-files]
+"share/cladding-delivery/config" = ["config/*.yaml"]
+"share/cladding-delivery/schemas" = ["schemas/*.json"]
