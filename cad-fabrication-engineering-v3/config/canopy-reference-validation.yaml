@@ -1,0 +1,80 @@
+project: canopy_reference_validation
+status: REFERENCE_VALIDATION
+units: mm
+geometry_level: NOMINAL_SKIN
+
+source:
+  drawing: 雨棚草图.dwg
+  drawing_sha256: d4fbd10a0377fb6b480e5de7d26d926615ee3d37bcc68a210176a7e7ee5d7dae
+  dwg_version: AC1018
+  parse_level: RECOVERED_DIMENSIONS_ONLY
+  parser_basis: recovered-dimensions-from-prior-DWG-validation
+  production_parser_required: ODA_OR_ACADSHARP
+
+source_dimensions:
+  - id: SD-L-001
+    value_mm: 29696.875
+    semantic: overall_setout_length
+    confidence: RECOVERED
+  - id: SD-L-002
+    value_mm: 2092.634
+    semantic: repeated_bay_pitch
+    repeat: 14
+    confidence: RECOVERED
+  - id: SD-P-001
+    segments_mm: [1190.0, 1170.0, 1170.0, 600.0]
+    value_mm: 4130.0
+    semantic: developed_cladding_profile_chain
+    confidence: INFERRED
+    note: 4130 is not treated as plan depth; it is retained as a reference profile chain pending production DWG verification.
+
+release_gates:
+  gate_a_confirmed: false
+  survey_required: true
+  survey_applied: false
+  production_release_authorized: false
+
+geometry:
+  overall_length: 29696.875
+  bay_count: 14
+  bay_pitch: 2092.634
+  end_margin_left: 200.0
+  end_margin_right: 200.0
+  top_depth_bands: [1190.0, 1170.0, 1170.0]
+  front_fascia_drop: 600.0
+  profile_path_length_ref: 4130.0
+  panel_thickness: 3.0
+  joint_gap: 8.0
+  joint_strategy: CENTERED_REFERENCE
+
+material:
+  name: Aluminum sheet - validation assumption
+  grade: 3003-H24
+  thickness: 3.0
+  density_kg_m3: 2730
+  finish: PVDF - validation assumption
+
+fabrication:
+  return_flange: 25.0
+  k_factor: 0.42
+  bend_radius: 3.0
+  flat_pattern_mode: NOT_RELEASED_REFERENCE_INPUTS_ONLY
+  fabrication_solid_status: NOT_DEFINED
+
+assumptions:
+  - id: A-001
+    severity: BLOCKING_FOR_PRODUCTION
+    statement: 材料牌号、厚度、表面处理及25mm折边均为验证假设，Gate A 尚未确认。
+    affects: [geometry, drawing, bom, flat_pattern]
+  - id: A-002
+    severity: BLOCKING_FOR_PRODUCTION
+    statement: 1190/1170/1170 被解释为顶面分带尺寸，须用生产级 DWG 解析复核原始语义。
+    affects: [geometry, drawing, panelization]
+  - id: A-003
+    severity: BLOCKING_FOR_PRODUCTION
+    statement: 600mm 被解释为前檐下翻，仅用于还原 4130 参考轮廓链，非已确认生产尺寸。
+    affects: [geometry, drawing, bom]
+  - id: A-004
+    severity: BLOCKING_FOR_PRODUCTION
+    statement: 节点、龙骨、角码、紧固件、防水排水、胶缝及结构接口均未建模。
+    affects: [geometry, drawing, production]
