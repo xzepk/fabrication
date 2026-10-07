@@ -1,0 +1,8 @@
+measurements:
+  - id: M-001
+    target_component_id: P-001
+    field: width_mm
+    design_value_mm: 1200
+    measured_value_mm: 1204
+    adopted_value_mm: 1204
+    evidence: "survey-sheet-001"
