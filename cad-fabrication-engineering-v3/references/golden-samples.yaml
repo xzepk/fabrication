@@ -1,0 +1,30 @@
+purpose: Immutable fingerprints for supplied DWG golden references. These files are
+  regression references only; no sample-specific layer/dimension values may be hard-coded
+  into production rules.
+files:
+- name: 加工图1#.dwg
+  role: reference_detail_fabrication_drawing
+  sha256: e6cd5a18ae9848b220e3d1b9d3dc82bcd7171429ed816630a2a70d176d134a0a
+  bytes: 159628
+- name: 加工图2#.dwg
+  role: reference_detail_fabrication_drawing
+  sha256: 3151514196544ae9853be1978c4f56f50287ae08b7e48f73d7ea197cf95c3329
+  bytes: 155172
+- name: 雨棚草图.dwg
+  role: source_sketch
+  sha256: d4fbd10a0377fb6b480e5de7d26d926615ee3d37bcc68a210176a7e7ee5d7dae
+  bytes: 146857
+- name: 雨棚铝板加工图整体.dwg
+  role: reference_overall_fabrication_drawing
+  sha256: 56224e1375cc1dd1e9042788872ec57647340686247ecc817ad98e7175f3dd73
+  bytes: 436671
+current_reference_expectations:
+  project: canopy_reference_validation
+  panel_count: 56
+  panel_type_count: 3
+  overall_length_mm: 29696.875
+  top_projection_depth_mm: 3530.0
+  profile_path_length_ref_mm: 4130.0
+  drawing_sheet_count: 3
+  panel_mark_coverage: 1.0
+  flat_pattern_released: false
