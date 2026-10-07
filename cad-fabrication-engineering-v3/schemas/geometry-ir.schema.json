@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/cadfab/geometry-ir-1.1.schema.json",
+  "title": "CAD Fabrication Geometry IR 1.1",
+  "type": "object",
+  "required": [
+    "ir_version", "project", "status", "units", "source", "source_dimensions",
+    "release_gates", "geometry_level", "geometry", "material", "fabrication",
+    "parts", "metrics", "assumptions"
+  ],
+  "properties": {
+    "ir_version": {"const": "1.1"},
+    "project": {"type": "string", "minLength": 1},
+    "status": {"enum": ["REFERENCE_VALIDATION", "PRELIMINARY", "SURVEY_PENDING", "PRODUCTION_CANDIDATE"]},
+    "units": {"const": "mm"},
+    "geometry_level": {"enum": ["NOMINAL_SKIN", "FABRICATION_SOLID", "ASSEMBLY_MODEL"]},
+    "source": {
+      "type": "object",
+      "required": ["drawing", "parse_level"],
+      "properties": {
+        "drawing": {"type": "string"},
+        "drawing_sha256": {"type": "string"},
+        "dwg_version": {"type": "string"},
+        "parse_level": {"type": "string"},
+        "parser_basis": {"type": "string"},
+        "production_parser_required": {"type": "string"}
+      }
+    },
+    "source_dimensions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "semantic", "confidence"],
+        "properties": {
+          "id": {"type": "string"},
+          "value_mm": {"type": "number"},
+          "segments_mm": {"type": "array", "items": {"type": "number"}},
+          "semantic": {"type": "string"},
+          "repeat": {"type": "integer", "minimum": 1},
+          "confidence": {"type": "string"},
+          "note": {"type": "string"}
+        }
+      }
+    },
+    "release_gates": {
+      "type": "object",
+      "required": ["gate_a_confirmed", "survey_required", "survey_applied", "production_release_authorized"],
+      "properties": {
+        "gate_a_confirmed": {"type": "boolean"},
+        "survey_required": {"type": "boolean"},
+        "survey_applied": {"type": "boolean"},
+        "production_release_authorized": {"type": "boolean"}
+      }
+    },
+    "geometry": {
+      "type": "object",
+      "required": [
+        "overall_length", "bay_count", "bay_pitch", "end_margin_left", "end_margin_right",
+        "top_depth_bands", "top_projection_depth", "front_fascia_drop",
+        "profile_path_length_ref", "panel_thickness", "joint_gap", "joint_strategy"
+      ],
+      "properties": {
+        "overall_length": {"type": "number", "exclusiveMinimum": 0},
+        "bay_count": {"type": "integer", "minimum": 1},
+        "bay_pitch": {"type": "number", "exclusiveMinimum": 0},
+        "end_margin_left": {"type": "number", "minimum": 0},
+        "end_margin_right": {"type": "number", "minimum": 0},
+        "top_depth_bands": {"type": "array", "minItems": 1, "items": {"type": "number", "exclusiveMinimum": 0}},
+        "top_projection_depth": {"type": "number", "exclusiveMinimum": 0},
+        "front_fascia_drop": {"type": "number", "minimum": 0},
+        "profile_path_length_ref": {"type": "number", "exclusiveMinimum": 0},
+        "panel_thickness": {"type": "number", "exclusiveMinimum": 0},
+        "joint_gap": {"type": "number", "minimum": 0},
+        "joint_strategy": {"type": "string"}
+      }
+    },
+    "material": {"type": "object"},
+    "fabrication": {"type": "object"},
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "severity", "statement", "affects"],
+        "properties": {
+          "id": {"type": "string"},
+          "severity": {"enum": ["INFO", "REVIEW_REQUIRED", "BLOCKING_FOR_PRODUCTION"]},
+          "statement": {"type": "string", "minLength": 1},
+          "affects": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "parts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "type_key", "kind", "bay", "width", "height", "thickness", "x", "y", "z", "orientation", "geometry_level", "area_m2"],
+        "properties": {
+          "id": {"type": "string"},
+          "type_key": {"type": "string"},
+          "kind": {"type": "string"},
+          "bay": {"type": "integer", "minimum": 1},
+          "band": {"type": ["integer", "null"]},
+          "width": {"type": "number", "exclusiveMinimum": 0},
+          "height": {"type": "number", "exclusiveMinimum": 0},
+          "thickness": {"type": "number", "exclusiveMinimum": 0},
+          "x": {"type": "number"},
+          "y": {"type": "number"},
+          "z": {"type": "number"},
+          "orientation": {"enum": ["XY", "XZ", "YZ"]},
+          "geometry_level": {"type": "string"},
+          "qty": {"type": "integer", "minimum": 1},
+          "area_m2": {"type": "number", "minimum": 0}
+        }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["panel_count", "net_visible_sheet_area_m2", "estimated_net_sheet_mass_kg", "flat_pattern_released"],
+      "properties": {
+        "panel_count": {"type": "integer", "minimum": 0},
+        "net_visible_sheet_area_m2": {"type": "number", "minimum": 0},
+        "estimated_net_sheet_mass_kg": {"type": "number", "minimum": 0},
+        "blank_area_m2": {"type": ["number", "null"]},
+        "purchase_area_m2": {"type": ["number", "null"]},
+        "flat_pattern_released": {"type": "boolean"}
+      }
+    }
+  }
+}
