@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Canonical Engineering Component",
+  "type": "object",
+  "required": ["id", "kind", "geometry", "material", "source"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "kind": {"enum": ["panel", "member", "custom"]},
+    "quantity": {"type": "integer", "minimum": 1, "default": 1},
+    "geometry": {"type": "object", "required": ["type"]},
+    "material": {"type": "object", "required": ["name"]},
+    "source": {
+      "type": "object",
+      "required": ["drawing_sha256"],
+      "properties": {
+        "drawing_sha256": {"type": "string"},
+        "entity_handles": {"type": "array", "items": {"type": "string"}},
+        "layer": {"type": ["string", "null"]},
+        "block_path": {"type": "array", "items": {"type": "string"}},
+        "transform_chain": {"type": "array"}
+      }
+    }
+  },
+  "additionalProperties": true
+}
