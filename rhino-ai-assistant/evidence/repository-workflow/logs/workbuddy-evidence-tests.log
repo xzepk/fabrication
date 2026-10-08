@@ -1,0 +1,29 @@
+STARTED_UTC: 2026-10-08T03:15:04.1276604Z
+WORKING_DIRECTORY: /workspace/shared/workbuddy-repo-update/rhino-ai-assistant
+COMMAND: "/usr/bin/python3" "-Xutf8" "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/scripts/test_workbuddy_evidence.py"
+STDOUT:
+
+STDERR:
+test_candidate_added_file_detected (__main__.EvidenceTests.test_candidate_added_file_detected) ... ok
+test_candidate_tampering_detected (__main__.EvidenceTests.test_candidate_tampering_detected) ... ok
+test_failed_command_blocked (__main__.EvidenceTests.test_failed_command_blocked) ... ok
+test_full_pass_with_incomplete_live_cases_blocked (__main__.EvidenceTests.test_full_pass_with_incomplete_live_cases_blocked) ... ok
+test_full_pass_with_unknown_commit_blocked (__main__.EvidenceTests.test_full_pass_with_unknown_commit_blocked) ... ok
+test_init_and_reverify_remain_blocked (__main__.EvidenceTests.test_init_and_reverify_remain_blocked) ... ok
+test_invalid_commit_rejected (__main__.EvidenceTests.test_invalid_commit_rejected) ... ok
+test_live_pass_without_evidence_blocked (__main__.EvidenceTests.test_live_pass_without_evidence_blocked) ... ok
+test_missing_candidate_blocked (__main__.EvidenceTests.test_missing_candidate_blocked) ... ok
+test_outside_run_rejected (__main__.EvidenceTests.test_outside_run_rejected) ... ok
+test_path_escape_blocked (__main__.EvidenceTests.test_path_escape_blocked) ... ok
+test_reinitialization_blocked (__main__.EvidenceTests.test_reinitialization_blocked) ... ok
+test_source_output_paths_excluded (__main__.EvidenceTests.test_source_output_paths_excluded) ... ok
+test_source_tampering_detected (__main__.EvidenceTests.test_source_tampering_detected) ... ok
+test_utf8_bom_and_chinese_evidence (__main__.EvidenceTests.test_utf8_bom_and_chinese_evidence) ... ok
+
+----------------------------------------------------------------------
+Ran 15 tests in 0.115s
+
+OK
+
+FINISHED_UTC: 2026-10-08T03:15:04.3186517Z
+EXIT_CODE: 0

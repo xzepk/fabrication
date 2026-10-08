@@ -1,0 +1,11 @@
+STARTED_UTC: 2026-10-08T03:14:59.3301829Z
+WORKING_DIRECTORY: /workspace/shared/workbuddy-repo-update/rhino-ai-assistant
+COMMAND: "/workspace/shared/dotnet-runtime/dotnet" "--list-runtimes"
+STDOUT:
+Microsoft.AspNetCore.App 8.0.31 [/workspace/shared/dotnet-runtime/shared/Microsoft.AspNetCore.App]
+Microsoft.NETCore.App 8.0.31 [/workspace/shared/dotnet-runtime/shared/Microsoft.NETCore.App]
+
+STDERR:
+
+FINISHED_UTC: 2026-10-08T03:14:59.3335561Z
+EXIT_CODE: 0

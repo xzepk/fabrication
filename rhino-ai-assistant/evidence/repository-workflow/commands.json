@@ -1,0 +1,121 @@
+[
+  {
+    "name": "python-version-1",
+    "exit_code": 0,
+    "log": "logs/python-version-1.log",
+    "started_utc": "2026-10-08T03:14:58.9807485Z",
+    "finished_utc": "2026-10-08T03:14:59.0208052Z"
+  },
+  {
+    "name": "source-git-tracked",
+    "exit_code": 128,
+    "log": "logs/source-git-tracked.log",
+    "started_utc": "2026-10-08T03:14:59.0457038Z",
+    "finished_utc": "2026-10-08T03:14:59.0504237Z"
+  },
+  {
+    "name": "dotnet-version",
+    "exit_code": 0,
+    "log": "logs/dotnet-version.log",
+    "started_utc": "2026-10-08T03:14:59.0691927Z",
+    "finished_utc": "2026-10-08T03:14:59.1672823Z"
+  },
+  {
+    "name": "dotnet-info",
+    "exit_code": 0,
+    "log": "logs/dotnet-info.log",
+    "started_utc": "2026-10-08T03:14:59.1754715Z",
+    "finished_utc": "2026-10-08T03:14:59.3276609Z"
+  },
+  {
+    "name": "dotnet-runtimes",
+    "exit_code": 0,
+    "log": "logs/dotnet-runtimes.log",
+    "started_utc": "2026-10-08T03:14:59.3301829Z",
+    "finished_utc": "2026-10-08T03:14:59.3335561Z"
+  },
+  {
+    "name": "source-verify",
+    "exit_code": 0,
+    "log": "logs/source-verify.log",
+    "started_utc": "2026-10-08T03:14:59.3403326Z",
+    "finished_utc": "2026-10-08T03:14:59.3977552Z"
+  },
+  {
+    "name": "restore",
+    "exit_code": 0,
+    "log": "logs/restore.log",
+    "started_utc": "2026-10-08T03:14:59.4002880Z",
+    "finished_utc": "2026-10-08T03:15:00.2908772Z"
+  },
+  {
+    "name": "build",
+    "exit_code": 0,
+    "log": "logs/build.log",
+    "started_utc": "2026-10-08T03:15:00.2957608Z",
+    "finished_utc": "2026-10-08T03:15:01.5956054Z"
+  },
+  {
+    "name": "core-tests",
+    "exit_code": 0,
+    "log": "logs/core-tests.log",
+    "started_utc": "2026-10-08T03:15:01.6111257Z",
+    "finished_utc": "2026-10-08T03:15:01.8433355Z"
+  },
+  {
+    "name": "host-tests",
+    "exit_code": 0,
+    "log": "logs/host-tests.log",
+    "started_utc": "2026-10-08T03:15:01.8463145Z",
+    "finished_utc": "2026-10-08T03:15:04.0599597Z"
+  },
+  {
+    "name": "release-gate-tests",
+    "exit_code": 0,
+    "log": "logs/release-gate-tests.log",
+    "started_utc": "2026-10-08T03:15:04.0628062Z",
+    "finished_utc": "2026-10-08T03:15:04.1207843Z"
+  },
+  {
+    "name": "workbuddy-evidence-tests",
+    "exit_code": 0,
+    "log": "logs/workbuddy-evidence-tests.log",
+    "started_utc": "2026-10-08T03:15:04.1276604Z",
+    "finished_utc": "2026-10-08T03:15:04.3186517Z"
+  },
+  {
+    "name": "powershell-tests",
+    "exit_code": 0,
+    "log": "logs/powershell-tests.log",
+    "started_utc": "2026-10-08T03:15:04.3260381Z",
+    "finished_utc": "2026-10-08T03:15:06.1210868Z"
+  },
+  {
+    "name": "publish-restore",
+    "exit_code": 0,
+    "log": "logs/publish-restore.log",
+    "started_utc": "2026-10-08T03:15:06.1230500Z",
+    "finished_utc": "2026-10-08T03:15:23.1876646Z"
+  },
+  {
+    "name": "publish",
+    "exit_code": 0,
+    "log": "logs/publish.log",
+    "started_utc": "2026-10-08T03:15:23.1906442Z",
+    "finished_utc": "2026-10-08T03:15:26.6862301Z"
+  },
+  {
+    "name": "evidence-init",
+    "exit_code": 0,
+    "log": "logs/evidence-init.log",
+    "started_utc": "2026-10-08T03:15:26.7015263Z",
+    "finished_utc": "2026-10-08T03:15:26.7587149Z"
+  },
+  {
+    "name": "release-gate",
+    "exit_code": 2,
+    "log": "logs/release-gate.log",
+    "started_utc": "2026-10-08T03:15:26.7605506Z",
+    "finished_utc": "2026-10-08T03:15:26.8020436Z"
+  }
+]

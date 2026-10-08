@@ -1,0 +1,21 @@
+{
+  "source_digest": "336e113a867e27a5a12b19cae4d9ce8b9bf5562b997fabd24dc5853f5c04d72f",
+  "files": {
+    "host/RhinoAi.Contracts.dll": "db15bacaf149af55852f6450371931f2346361991957bef774294f1991b642b2",
+    "host/RhinoAi.Contracts.pdb": "8dab1feb81032da467936acf8e8841ecf773c8af3643f40ad0ee397dba9f218c",
+    "host/RhinoAi.Core.dll": "9f16422ceeba2625ded3cb6154ad5038a61744b7cbff77c966c86503a733387c",
+    "host/RhinoAi.Core.pdb": "1d49809c0c7616a899ef1958ee6ad22112a32955795738fa81e02cd1d3f0a894",
+    "host/RhinoAi.Host.deps.json": "484bda409672eefb05fd2790e22272d9e6f573ff2a6df66b4248560a03480bf8",
+    "host/RhinoAi.Host.dll": "4009c7a8777ef958101eae3088bf98e377f7f96d0187a7f7b9d887ecd50e6953",
+    "host/RhinoAi.Host.exe": "77ab1a1e867c36a01d76b720c60fc42acef3dbaafa47dbf53eb7c2ef86ff9e9a",
+    "host/RhinoAi.Host.pdb": "5eaf8c8d15ade9cb615e26ddf6b58cf7bc7082e536ee39ce5d929a6b69f741fb",
+    "host/RhinoAi.Host.runtimeconfig.json": "4351dd23692b878de26903bbf54de76dfa20dd13d0600ee1cfa3b005592bb4cd",
+    "host/packages.lock.json": "cdbba9cd079b56cc750ba351e63407bdb6540e86b802d9722ae2aa9b105a4bca",
+    "host/packages.win-x64.lock.json": "7e5c3d7f7e111bfbbe814705ead4305201e72548e0df0228386df4ce7bc134be",
+    "host/web.config": "45092496909f74599ecb3b5b7a424cf6a4475ed53ea8a73ccf9af1c1b48a5b33",
+    "plugin/RhinoAi.Contracts.dll": "db15bacaf149af55852f6450371931f2346361991957bef774294f1991b642b2",
+    "plugin/RhinoAi.Core.dll": "9f16422ceeba2625ded3cb6154ad5038a61744b7cbff77c966c86503a733387c",
+    "plugin/RhinoAi.Plugin.deps.json": "2fe989468044ce0f0028a640443134d445c089b2982a07fd62a2ecc8112c3c4b",
+    "plugin/RhinoAi.Plugin.rhp": "72b2164eb3a823d9b4cfd0f6d00738fa9166262a83fdc4f3b0f3b49eac1cbc1e"
+  }
+}

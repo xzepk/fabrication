@@ -1,0 +1,13 @@
+STARTED_UTC: 2026-10-08T03:15:23.1906442Z
+WORKING_DIRECTORY: /workspace/shared/workbuddy-repo-update/rhino-ai-assistant
+COMMAND: "/workspace/shared/dotnet-runtime/dotnet" "publish" "src/RhinoAi.Host/RhinoAi.Host.csproj" "--no-restore" "-c" "Release" "-r" "win-x64" "--self-contained" "false" "-p:UseAppHost=true" "-p:NuGetLockFilePath=packages.win-x64.lock.json" "-o" "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/artifacts/workbuddy-runs/publication-validation-20261008/candidate/host" "-m:1"
+STDOUT:
+  RhinoAi.Contracts -> /workspace/shared/workbuddy-repo-update/rhino-ai-assistant/src/RhinoAi.Contracts/bin/Release/net8.0/RhinoAi.Contracts.dll
+  RhinoAi.Core -> /workspace/shared/workbuddy-repo-update/rhino-ai-assistant/src/RhinoAi.Core/bin/Release/net8.0/RhinoAi.Core.dll
+  RhinoAi.Host -> /workspace/shared/workbuddy-repo-update/rhino-ai-assistant/src/RhinoAi.Host/bin/Release/net8.0/win-x64/RhinoAi.Host.dll
+  RhinoAi.Host -> /workspace/shared/workbuddy-repo-update/rhino-ai-assistant/artifacts/workbuddy-runs/publication-validation-20261008/candidate/host/
+
+STDERR:
+
+FINISHED_UTC: 2026-10-08T03:15:26.6862301Z
+EXIT_CODE: 0

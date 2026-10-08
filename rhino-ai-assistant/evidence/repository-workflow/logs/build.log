@@ -1,0 +1,21 @@
+STARTED_UTC: 2026-10-08T03:15:00.2957608Z
+WORKING_DIRECTORY: /workspace/shared/workbuddy-repo-update/rhino-ai-assistant
+COMMAND: "/workspace/shared/dotnet-runtime/dotnet" "build" "RhinoAi.sln" "--no-restore" "-c" "Release" "-m:1"
+STDOUT:
+  RhinoAi.Contracts -> /workspace/shared/workbuddy-repo-update/rhino-ai-assistant/src/RhinoAi.Contracts/bin/Release/net8.0/RhinoAi.Contracts.dll
+  RhinoAi.Core -> /workspace/shared/workbuddy-repo-update/rhino-ai-assistant/src/RhinoAi.Core/bin/Release/net8.0/RhinoAi.Core.dll
+  RhinoAi.Host -> /workspace/shared/workbuddy-repo-update/rhino-ai-assistant/src/RhinoAi.Host/bin/Release/net8.0/RhinoAi.Host.dll
+  RhinoAi.Plugin -> /workspace/shared/workbuddy-repo-update/rhino-ai-assistant/src/RhinoAi.Plugin/bin/Release/net8.0-windows/RhinoAi.Plugin.rhp
+  RhinoAi.Core.Tests -> /workspace/shared/workbuddy-repo-update/rhino-ai-assistant/tests/RhinoAi.Core.Tests/bin/Release/net8.0/RhinoAi.Core.Tests.dll
+  RhinoAi.Host.IntegrationTests -> /workspace/shared/workbuddy-repo-update/rhino-ai-assistant/tests/RhinoAi.Host.IntegrationTests/bin/Release/net8.0/RhinoAi.Host.IntegrationTests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:01.13
+
+STDERR:
+
+FINISHED_UTC: 2026-10-08T03:15:01.5956054Z
+EXIT_CODE: 0

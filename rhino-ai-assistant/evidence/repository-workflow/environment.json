@@ -1,0 +1,12 @@
+{
+  "source_root": "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant",
+  "source_commit": null,
+  "sdk_version": "8.0.425",
+  "platform": "Unix 6.18.44.0",
+  "process_64_bit": true,
+  "cross_build": true,
+  "live_windows_rhino": "NOT_RUN",
+  "dotnet": "/workspace/shared/dotnet-runtime/dotnet",
+  "python": "/usr/bin/python3",
+  "note": "Prerequisites and headless tests do not establish live Windows/Rhino qualification."
+}

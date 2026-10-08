@@ -1,0 +1,11 @@
+STARTED_UTC: 2026-10-08T03:14:59.0457038Z
+WORKING_DIRECTORY: /workspace/shared/workbuddy-repo-update/rhino-ai-assistant
+COMMAND: "/usr/local/bin/git" "-C" "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant" "ls-files" "--error-unmatch" "--" "RhinoAi.sln" "global.json" "src/RhinoAi.Host/RhinoAi.Host.csproj"
+STDOUT:
+
+STDERR:
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+
+FINISHED_UTC: 2026-10-08T03:14:59.0504237Z
+EXIT_CODE: 128

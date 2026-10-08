@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "verified_at_utc": "2026-10-08T03:15:26.753243+00:00",
+  "candidate": "rhino-ai-harness-stage1-repository-workflow",
+  "source_digest": "336e113a867e27a5a12b19cae4d9ce8b9bf5562b997fabd24dc5853f5c04d72f",
+  "source_commit": null,
+  "source_commit_provenance": "UNKNOWN; preserve download provenance before live qualification",
+  "production_status": "REVIEW",
+  "stage1_release": "BLOCKED",
+  "live_environment": {},
+  "checks": {
+    "F-01": {
+      "status": "PASS",
+      "execution": "actual-sdk-compilation",
+      "evidence": [
+        "evidence/repository-workflow/logs/restore.log",
+        "evidence/repository-workflow/logs/build.log",
+        "evidence/repository-workflow/logs/publish-restore.log",
+        "evidence/repository-workflow/logs/publish.log"
+      ],
+      "reason": "Actual locked restore/build and framework-dependent win-x64 publish succeeded in this run. This does not establish Windows/Rhino execution."
+    },
+    "F-02": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No live Windows/Rhino acceptance has been recorded for this run.",
+      "evidence": []
+    },
+    "F-03": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No live Windows/Rhino acceptance has been recorded for this run.",
+      "evidence": []
+    },
+    "F-04": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No live Windows/Rhino acceptance has been recorded for this run.",
+      "evidence": []
+    },
+    "F-05": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No live Windows/Rhino acceptance has been recorded for this run.",
+      "evidence": []
+    },
+    "F-06": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No live Windows/Rhino acceptance has been recorded for this run.",
+      "evidence": []
+    },
+    "F-07": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No live Windows/Rhino acceptance has been recorded for this run.",
+      "evidence": []
+    },
+    "F-08": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No live Windows/Rhino acceptance has been recorded for this run.",
+      "evidence": []
+    },
+    "F-09": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No live Windows/Rhino acceptance has been recorded for this run.",
+      "evidence": []
+    },
+    "F-10": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No live Windows/Rhino acceptance has been recorded for this run.",
+      "evidence": []
+    },
+    "F-11": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No live Windows/Rhino acceptance has been recorded for this run.",
+      "evidence": []
+    },
+    "F-12": {
+      "status": "PASS",
+      "execution": "automated",
+      "evidence": [
+        "evidence/repository-workflow/logs/core-tests.log",
+        "evidence/repository-workflow/logs/host-tests.log",
+        "evidence/repository-workflow/logs/release-gate-tests.log",
+        "evidence/repository-workflow/logs/workbuddy-evidence-tests.log"
+      ],
+      "reason": "Actual automated Core, HTTP-process, release-gate and repository-evidence tests passed for this run. Live Rhino remains separate."
+    }
+  },
+  "automated_results": {
+    "core_passed": 37,
+    "core_total": 37,
+    "http_passed": 52,
+    "http_failed": 0,
+    "powershell_helpers_passed": 15,
+    "powershell_helpers_failed": 0,
+    "release_gate_assertions_passed": 83,
+    "workbuddy_evidence_tests_passed": 15
+  },
+  "live_cases_file": "evidence/repository-workflow/live-cases.json",
+  "source_origin": {
+    "parent_remote_commit": "de752e45d6707b8bc538a6e56317eeaa374ab79b",
+    "scope": "Repository workflow changes over verified remote module; actual source bytes bound by source-manifest.json. New publication commit is recorded by Git itself, not embedded self-referentially."
+  },
+  "automated_environment": {
+    "source_root": "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant",
+    "source_commit": null,
+    "sdk_version": "8.0.425",
+    "platform": "Unix 6.18.44.0",
+    "process_64_bit": true,
+    "cross_build": true,
+    "live_windows_rhino": "NOT_RUN",
+    "dotnet": "/workspace/shared/dotnet-runtime/dotnet",
+    "python": "/usr/bin/python3",
+    "note": "Prerequisites and headless tests do not establish live Windows/Rhino qualification.",
+    "powershell": "7.4.7 Linux portable; Windows PowerShell 5.1 and Windows PowerShell 7 NOT_RUN"
+  }
+}

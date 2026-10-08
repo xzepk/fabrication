@@ -84,7 +84,7 @@ try
     await Test("storage failure refuses success and quarantines health", async () => { var moved = state + "-offline"; Directory.Move(state, moved); await File.WriteAllTextAsync(state, "blocked"); try { await Status(await PostPrepare(Input()), 503); await Status(await host.Client.GetAsync("health"), 503); } finally { File.Delete(state); Directory.Move(moved, state); } });
 }
 finally { host.Dispose(); }
-var summary = new { schemaVersion = 1, timestamp = DateTimeOffset.UtcNow, environment = RuntimeInformation.OSDescription, dotnet = Environment.Version.ToString(), hostBinary = hostDll, hostSha256 = Convert.ToHexString(SHA256.HashData(await File.ReadAllBytesAsync(hostDll))), liveRhino = "NOT_RUN: Linux HTTP process tests do not execute RhinoCommon or native Undo/Redo.", passed = results.Count - failed, failed, tests = results };
+var summary = new { schemaVersion = 1, timestamp = DateTimeOffset.UtcNow, environment = RuntimeInformation.OSDescription, dotnet = Environment.Version.ToString(), hostBinary = hostDll, hostSha256 = Convert.ToHexString(SHA256.HashData(await File.ReadAllBytesAsync(hostDll))), liveRhino = "NOT_RUN: Headless HTTP process tests do not execute RhinoCommon or native Undo/Redo.", passed = results.Count - failed, failed, tests = results };
 await File.WriteAllTextAsync(Path.Combine(evidenceDirectory, "results.json"), JsonSerializer.Serialize(summary, Protocol.Json));
 Console.WriteLine($"Host HTTP integration: {results.Count - failed} PASS, {failed} FAIL. Live Rhino: NOT_RUN.");
 return failed == 0 ? 0 : 1;

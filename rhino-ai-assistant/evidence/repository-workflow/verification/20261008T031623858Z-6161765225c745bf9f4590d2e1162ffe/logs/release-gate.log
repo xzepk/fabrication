@@ -1,0 +1,20 @@
+STARTED_UTC: 2026-10-08T03:16:24.0245311Z
+WORKING_DIRECTORY: /workspace/shared/workbuddy-repo-update/rhino-ai-assistant
+COMMAND: "/usr/bin/python3" "-Xutf8" "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/scripts/release_gate.py" "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/artifacts/workbuddy-runs/publication-validation-20261008/acceptance.local.json" "--source-root" "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant"
+STDOUT:
+STAGE 1 RELEASE BLOCKED
+F-02: NOT_RUN — No live Windows/Rhino acceptance has been recorded for this run.
+F-03: NOT_RUN — No live Windows/Rhino acceptance has been recorded for this run.
+F-04: NOT_RUN — No live Windows/Rhino acceptance has been recorded for this run.
+F-05: NOT_RUN — No live Windows/Rhino acceptance has been recorded for this run.
+F-06: NOT_RUN — No live Windows/Rhino acceptance has been recorded for this run.
+F-07: NOT_RUN — No live Windows/Rhino acceptance has been recorded for this run.
+F-08: NOT_RUN — No live Windows/Rhino acceptance has been recorded for this run.
+F-09: NOT_RUN — No live Windows/Rhino acceptance has been recorded for this run.
+F-10: NOT_RUN — No live Windows/Rhino acceptance has been recorded for this run.
+F-11: NOT_RUN — No live Windows/Rhino acceptance has been recorded for this run.
+
+STDERR:
+
+FINISHED_UTC: 2026-10-08T03:16:24.0687432Z
+EXIT_CODE: 2

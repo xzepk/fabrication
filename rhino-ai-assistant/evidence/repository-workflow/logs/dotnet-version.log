@@ -1,0 +1,10 @@
+STARTED_UTC: 2026-10-08T03:14:59.0691927Z
+WORKING_DIRECTORY: /workspace/shared/workbuddy-repo-update/rhino-ai-assistant
+COMMAND: "/workspace/shared/dotnet-runtime/dotnet" "--version"
+STDOUT:
+8.0.425
+
+STDERR:
+
+FINISHED_UTC: 2026-10-08T03:14:59.1672823Z
+EXIT_CODE: 0

@@ -1,0 +1,6 @@
+{
+  "source_root": "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant",
+  "run_root": "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/artifacts/workbuddy-runs/publication-validation-20261008",
+  "release_gate_exit_code": 2,
+  "production_status": "REVIEW"
+}

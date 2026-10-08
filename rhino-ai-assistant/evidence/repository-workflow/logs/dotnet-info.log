@@ -1,0 +1,52 @@
+STARTED_UTC: 2026-10-08T03:14:59.1754715Z
+WORKING_DIRECTORY: /workspace/shared/workbuddy-repo-update/rhino-ai-assistant
+COMMAND: "/workspace/shared/dotnet-runtime/dotnet" "--info"
+STDOUT:
+.NET SDK:
+ Version:           8.0.425
+ Commit:            4a98f641c7
+ Workload version:  8.0.400-manifests.ac071bc2
+ MSBuild version:   17.11.48+02bf66295
+
+Runtime Environment:
+ OS Name:     debian
+ OS Version:  13
+ OS Platform: Linux
+ RID:         linux-x64
+ Base Path:   /workspace/shared/dotnet-runtime/sdk/8.0.425/
+
+.NET workloads installed:
+Configured to use loose manifests when installing new manifests.
+There are no installed workloads to display.
+
+Host:
+  Version:      8.0.31
+  Architecture: x64
+  Commit:       1219a42122
+
+.NET SDKs installed:
+  8.0.425 [/workspace/shared/dotnet-runtime/sdk]
+
+.NET runtimes installed:
+  Microsoft.AspNetCore.App 8.0.31 [/workspace/shared/dotnet-runtime/shared/Microsoft.AspNetCore.App]
+  Microsoft.NETCore.App 8.0.31 [/workspace/shared/dotnet-runtime/shared/Microsoft.NETCore.App]
+
+Other architectures found:
+  None
+
+Environment variables:
+  Not set
+
+global.json file:
+  /workspace/shared/workbuddy-repo-update/rhino-ai-assistant/global.json
+
+Learn more:
+  https://aka.ms/dotnet/info
+
+Download .NET:
+  https://aka.ms/dotnet/download
+
+STDERR:
+
+FINISHED_UTC: 2026-10-08T03:14:59.3276609Z
+EXIT_CODE: 0

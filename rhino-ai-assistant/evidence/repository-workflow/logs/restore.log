@@ -1,0 +1,11 @@
+STARTED_UTC: 2026-10-08T03:14:59.4002880Z
+WORKING_DIRECTORY: /workspace/shared/workbuddy-repo-update/rhino-ai-assistant
+COMMAND: "/workspace/shared/dotnet-runtime/dotnet" "restore" "RhinoAi.sln" "--locked-mode" "--source" "https://api.nuget.org/v3/index.json" "-m:1"
+STDOUT:
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+
+STDERR:
+
+FINISHED_UTC: 2026-10-08T03:15:00.2908772Z
+EXIT_CODE: 0

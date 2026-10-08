@@ -1,0 +1,68 @@
+{
+  "passed": 15,
+  "failed": 0,
+  "powershell_version": "7.4.7",
+  "platform": "Unix 6.18.44.0",
+  "tests": [
+    {
+      "name": "all shipped PowerShell scripts parse",
+      "status": "PASS"
+    },
+    {
+      "name": "source resolves from extracted parent with spaces and Unicode",
+      "status": "PASS"
+    },
+    {
+      "name": "source resolves from module and ignores current directory",
+      "status": "PASS"
+    },
+    {
+      "name": "missing source markers are rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "artifact copies do not make source ambiguous",
+      "status": "PASS"
+    },
+    {
+      "name": "ambiguous extracted parents are rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "default run names are unique and under module artifacts",
+      "status": "PASS"
+    },
+    {
+      "name": "relative run paths resolve against module",
+      "status": "PASS"
+    },
+    {
+      "name": "outside and traversal run paths are rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "existing run evidence is never reused",
+      "status": "PASS"
+    },
+    {
+      "name": "JSON is UTF-8 without BOM",
+      "status": "PASS"
+    },
+    {
+      "name": "native arguments preserve spaces quotes backslashes and Unicode",
+      "status": "PASS"
+    },
+    {
+      "name": "nonzero native exits fail immediately and preserve logs",
+      "status": "PASS"
+    },
+    {
+      "name": "gate exit 2 is explicitly preserved rather than replaced with 0",
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate command names never overwrite earlier logs",
+      "status": "PASS"
+    }
+  ]
+}

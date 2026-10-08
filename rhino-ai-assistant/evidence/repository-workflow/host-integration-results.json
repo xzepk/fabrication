@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "timestamp": "2026-10-08T03:15:04.0480671+00:00",
+  "environment": "Debian GNU/Linux 13 (trixie)",
+  "dotnet": "8.0.31",
+  "hostBinary": "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/src/RhinoAi.Host/bin/Release/net8.0/RhinoAi.Host.dll",
+  "hostSha256": "FD50E5817C9CBB557B156D9E4C231CA5C5FB8E5D4822337D5813E553330E7D5D",
+  "liveRhino": "NOT_RUN: Headless HTTP process tests do not execute RhinoCommon or native Undo/Redo.",
+  "passed": 52,
+  "failed": 0,
+  "tests": [
+    {
+      "name": "authenticated health and REVIEW status",
+      "status": "PASS"
+    },
+    {
+      "name": "short startup nonce fails closed",
+      "status": "PASS"
+    },
+    {
+      "name": "missing bearer nonce denied",
+      "status": "PASS"
+    },
+    {
+      "name": "incorrect bearer nonce denied",
+      "status": "PASS"
+    },
+    {
+      "name": "Origin header denied even with valid auth",
+      "status": "PASS"
+    },
+    {
+      "name": "external Host header denied",
+      "status": "PASS"
+    },
+    {
+      "name": "wrong loopback Host port denied",
+      "status": "PASS"
+    },
+    {
+      "name": "external URL config cannot change loopback bind",
+      "status": "PASS"
+    },
+    {
+      "name": "unknown endpoint and arbitrary code endpoint denied",
+      "status": "PASS"
+    },
+    {
+      "name": "invalid operation UUID rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "unknown operation gives typed not-found",
+      "status": "PASS"
+    },
+    {
+      "name": "wrong Content-Type rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "content-encoded body rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "oversize Content-Length rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "oversize chunked body rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "malformed JSON rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "null and missing required fields rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "unknown JSON fields rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "duplicate JSON keys rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "missing scalar DTO fields do not silently default",
+      "status": "PASS"
+    },
+    {
+      "name": "wrong JSON property case rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "unsupported protocol rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "unsupported tool rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "invalid geometry and stale context rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "numeric operation enums rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "prepare persists detached plan and before checkpoint",
+      "status": "PASS"
+    },
+    {
+      "name": "numeric NaN and null entity entries rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "same operation/hash deduplicates concurrent retries",
+      "status": "PASS"
+    },
+    {
+      "name": "same operation changed payload rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "commit without applying acknowledgement rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "applying acknowledgement durably persisted before mutation",
+      "status": "PASS"
+    },
+    {
+      "name": "concurrent same-document applying blocked",
+      "status": "PASS"
+    },
+    {
+      "name": "arbitrary post-applying cancellation rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "invalid completion cannot claim commit",
+      "status": "PASS"
+    },
+    {
+      "name": "verified completion committed",
+      "status": "PASS"
+    },
+    {
+      "name": "lost completion ACK retry returns identical stored outcome",
+      "status": "PASS"
+    },
+    {
+      "name": "same terminal state changed outcome rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "committed record cannot replay applying",
+      "status": "PASS"
+    },
+    {
+      "name": "restart preserves completed operation and changes session nonce",
+      "status": "PASS"
+    },
+    {
+      "name": "restart quarantines interrupted applying",
+      "status": "PASS"
+    },
+    {
+      "name": "new operations blocked until document recovery reconciled",
+      "status": "PASS"
+    },
+    {
+      "name": "durable plugin completion reconciles host crash without reapply",
+      "status": "PASS"
+    },
+    {
+      "name": "proven pre-mutation cancellation reconciles applying",
+      "status": "PASS"
+    },
+    {
+      "name": "prepared reject and cancel are terminal",
+      "status": "PASS"
+    },
+    {
+      "name": "checkpoint restore verifies effect and survives restart",
+      "status": "PASS"
+    },
+    {
+      "name": "translation verifies changed fingerprint and preserves business identity",
+      "status": "PASS"
+    },
+    {
+      "name": "checkpoint restore changed target under same ID conflicts",
+      "status": "PASS"
+    },
+    {
+      "name": "malformed journal fails closed without automatic reset",
+      "status": "PASS"
+    },
+    {
+      "name": "unknown and corrupt journals fail closed at startup",
+      "status": "PASS"
+    },
+    {
+      "name": "second host cannot share the journal writer lease",
+      "status": "PASS"
+    },
+    {
+      "name": "nonce never persisted or logged",
+      "status": "PASS"
+    },
+    {
+      "name": "storage failure refuses success and quarantines health",
+      "status": "PASS"
+    }
+  ]
+}

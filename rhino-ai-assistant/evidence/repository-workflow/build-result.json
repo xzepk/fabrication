@@ -1,0 +1,12 @@
+{
+  "build_and_headless_tests": "PASS",
+  "build_exit_code": 0,
+  "release_gate_exit_code": 2,
+  "release_status": "BLOCKED",
+  "live_windows_rhino": "NOT_RUN",
+  "production_status": "REVIEW",
+  "cross_build": true,
+  "source_root": "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant",
+  "candidate": "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/artifacts/workbuddy-runs/publication-validation-20261008/candidate",
+  "acceptance": "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/artifacts/workbuddy-runs/publication-validation-20261008/acceptance.local.json"
+}

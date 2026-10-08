@@ -1,0 +1,2 @@
+# Keep manifest source bytes identical in Windows and Unix checkouts.
+* -text

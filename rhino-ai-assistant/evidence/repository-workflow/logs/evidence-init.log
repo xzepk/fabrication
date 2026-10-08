@@ -1,0 +1,10 @@
+STARTED_UTC: 2026-10-08T03:15:26.7015263Z
+WORKING_DIRECTORY: /workspace/shared/workbuddy-repo-update/rhino-ai-assistant
+COMMAND: "/usr/bin/python3" "-Xutf8" "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/scripts/workbuddy_evidence.py" "init" "--source-root" "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant" "--run-root" "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/artifacts/workbuddy-runs/publication-validation-20261008"
+STDOUT:
+PASS init: source 336e113a867e27a5a12b19cae4d9ce8b9bf5562b997fabd24dc5853f5c04d72f; live Rhino is not implied.
+
+STDERR:
+
+FINISHED_UTC: 2026-10-08T03:15:26.7587149Z
+EXIT_CODE: 0

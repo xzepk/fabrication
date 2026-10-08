@@ -1,0 +1,23 @@
+[
+  {
+    "name": "python-version-1",
+    "exit_code": 0,
+    "log": "logs/python-version-1.log",
+    "started_utc": "2026-10-08T03:16:23.9003730Z",
+    "finished_utc": "2026-10-08T03:16:23.9412205Z"
+  },
+  {
+    "name": "verify-run",
+    "exit_code": 0,
+    "log": "logs/verify-run.log",
+    "started_utc": "2026-10-08T03:16:23.9577548Z",
+    "finished_utc": "2026-10-08T03:16:24.0213995Z"
+  },
+  {
+    "name": "release-gate",
+    "exit_code": 2,
+    "log": "logs/release-gate.log",
+    "started_utc": "2026-10-08T03:16:24.0245311Z",
+    "finished_utc": "2026-10-08T03:16:24.0687432Z"
+  }
+]

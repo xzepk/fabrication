@@ -1,0 +1,13 @@
+STARTED_UTC: 2026-10-08T03:15:06.1230500Z
+WORKING_DIRECTORY: /workspace/shared/workbuddy-repo-update/rhino-ai-assistant
+COMMAND: "/workspace/shared/dotnet-runtime/dotnet" "restore" "src/RhinoAi.Host/RhinoAi.Host.csproj" "-r" "win-x64" "--locked-mode" "--source" "https://api.nuget.org/v3/index.json" "-p:NuGetLockFilePath=packages.win-x64.lock.json" "-m:1"
+STDOUT:
+  Determining projects to restore...
+  Restored /workspace/shared/workbuddy-repo-update/rhino-ai-assistant/src/RhinoAi.Core/RhinoAi.Core.csproj (in 16.22 sec).
+  Restored /workspace/shared/workbuddy-repo-update/rhino-ai-assistant/src/RhinoAi.Contracts/RhinoAi.Contracts.csproj (in 16.21 sec).
+  Restored /workspace/shared/workbuddy-repo-update/rhino-ai-assistant/src/RhinoAi.Host/RhinoAi.Host.csproj (in 16.22 sec).
+
+STDERR:
+
+FINISHED_UTC: 2026-10-08T03:15:23.1876646Z
+EXIT_CODE: 0

@@ -4,6 +4,28 @@
 
 This module implements the first slice of the existing [product specification](SPEC.md), revised to v0.2 from upstream commit `9561a0b929f9191e66230196d1be1d7453115aff`. It does not replace or merge the independent `cladding-delivery` and `cad-fabrication-engineering-v3` packages.
 
+## WorkBuddy: start from this repository
+
+**[中文主操作说明：从仓库构建、加载与实机验收](docs/WORKBUDDY.md)**
+
+Use an authenticated clone or a GitHub source archive of the selected commit. No chat ZIP, Library attachment, prebuilt binary, or other assistant's filesystem is required. For a new clone, use `git clone -c core.autocrlf=false https://github.com/xzepk/fabrication.git` so checkout preserves the source bytes; this does not change global Git settings. Record the actual checkout HEAD or archive commit. `SOURCE_BASELINE.json` describes the earlier specification baseline, not the current implementation commit.
+
+On an authorized Windows x64 test workstation, use the repository-native PowerShell workflow:
+
+```powershell
+# From rhino-ai-assistant/. Use a fresh run directory every time.
+$Source = (Get-Location).Path
+$RunId = (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ') + '-' + [Guid]::NewGuid().ToString('N').Substring(0,8)
+$RunRoot = Join-Path $Source ('artifacts\workbuddy-runs\' + $RunId)
+.\scripts\workbuddy-build.ps1 -SourcePath $Source -RunRoot $RunRoot
+# After recording actual live results, verify the same run:
+.\scripts\workbuddy-verify.ps1 -SourcePath $Source -RunRoot $RunRoot
+```
+
+The build script verifies the committed [repository-workflow source manifest](evidence/repository-workflow/source-manifest.json), uses locked dependencies, runs automated tests, and builds the framework-dependent win-x64 Host and `.rhp` locally. It creates candidate hashes, logs, `acceptance.local.json`, and `live-cases.json` under the new run directory. GitHub archive users supply the verified full commit with `-SourceCommit`; optional `-Dotnet` and `-Python` accept existing tool paths. The [runbook](docs/WORKBUDDY.md) covers all parameters, permissions, exact GUI steps, L-01–L-20/F-01–F-12 coverage, and safe failure handling.
+
+A successful build exits 0 for build/headless tests and separately records the initial gate exit code in `build-result.json`. The verifier preserves previous gate logs and never overwrites historical acceptance. **Exit 2 / BLOCKED is expected until required live Rhino checks are actually completed.** Missing debugger/fault-injection capability blocks L-15/L-16/L-18 and the affected gates; ordinary GUI checks can still proceed. Build success is not installation, live acceptance, or production approval. No compiled candidate binaries are committed.
+
 ## What is implemented
 
 - Actual C# RhinoCommon/Eto plugin project, with floating and dockable entry points, document-bound adapter and detached display preview.
@@ -25,6 +47,8 @@ This is a structured-tool foundation. Natural-language LLM planning, cladding in
 - `tests/RhinoAi.Core.Tests`: deterministic fault-injection tests with a fake adapter
 - `tests/RhinoAi.Host.IntegrationTests`: real process/HTTP tests without Rhino
 - `evidence/`: actual build/test results and explicit acceptance status
+- `docs/WORKBUDDY.md`: primary repository-only Windows build/load/live-acceptance runbook
+- `scripts/workbuddy-build.ps1` and `scripts/workbuddy-verify.ps1`: native Windows build and per-run evidence verification
 - `scripts/release_gate.py`: fail-closed acceptance gate; it never grants engineering production approval
 
 ## Runtime and dependency pinning
@@ -33,13 +57,13 @@ Build with .NET SDK 8.0.425 (the patch can roll forward within the SDK feature b
 
 The initial qualification target is Windows Rhino **8.20 running .NET 8**. The official RhinoCommon NuGet feed exposes the 8.20 reference as `8.20.25147.11001-rc`, which is pinned exactly with its transitive Eto reference in `packages.lock.json`. This is an SDK-reference compilation target, not evidence that a Rhino release candidate was executed. Newer Rhino/service-release/runtime combinations need explicit live qualification. .NET Framework, macOS Rhino and Linux Rhino execution are not qualified.
 
-The framework-dependent ASP.NET Host additionally requires Microsoft.AspNetCore.App 8.0 on Windows; Rhino’s embedded runtime alone does not establish that prerequisite. A supplied win-x64 apphost is a cross-built candidate, not a live Windows qualification.
+The framework-dependent ASP.NET Host additionally requires Microsoft.AspNetCore.App 8.0 on Windows; Rhino’s embedded runtime alone does not establish that prerequisite. A locally built or cross-built win-x64 apphost is a candidate, not a live Windows qualification.
 
 RhinoCommon/Eto are compile references supplied by Rhino at runtime. This project does not bundle a fake SDK or use Rhino.Compute. The cross-platform Host can run on Linux, but this does not provide a Linux Rhino executor.
 
-## Reproduce verification
+## Manual headless verification and historical evidence
 
-From this module root:
+For WorkBuddy on Windows, use the native workflow above. For manual build/test diagnostics, from this module root:
 
 ```sh
 dotnet restore RhinoAi.sln --locked-mode -m:1
@@ -47,18 +71,20 @@ dotnet build RhinoAi.sln --no-restore -c Release -m:1
 dotnet tests/RhinoAi.Core.Tests/bin/Release/net8.0/RhinoAi.Core.Tests.dll
 dotnet tests/RhinoAi.Host.IntegrationTests/bin/Release/net8.0/RhinoAi.Host.IntegrationTests.dll
 python3 scripts/test_release_gate.py
-python3 scripts/release_gate.py evidence/acceptance.json
+python3 scripts/test_workbuddy_evidence.py
 ```
 
-The final command deliberately exits **2 (BLOCKED)** while required live Rhino checks remain `NOT_RUN`/`BLOCKED`. A green build/headless test run must not be relabeled as a complete Stage 1 pass.
+These commands do not perform live acceptance. Run `workbuddy-verify.ps1` against the corresponding per-run `acceptance.local.json`; it deliberately exits **2 (BLOCKED)** while required live Rhino checks remain `NOT_RUN`/`BLOCKED`. A green build/headless test run must not be relabeled as a complete Stage 1 pass.
 
 `DOTNET=/path/to/dotnet bash scripts/publish-windows.sh` cross-builds the framework-dependent Windows Host and collects the separately built plugin; its separate `packages.win-x64.lock.json` files preserve the normal build locks. Windows execution is still unqualified.
 
-`DOTNET=/path/to/dotnet bash scripts/verify.sh` runs the same sequence and records logs. In a read-only-home container, set `DOTNET_CLI_HOME`, `NUGET_PACKAGES` and `NUGET_HTTP_CACHE_PATH` to writable temporary directories. No change to the user's machine, network/security settings or account credentials is needed for these cloud checks.
+The original `scripts/verify.sh` and `evidence/acceptance.json` belong to the earlier Linux validation workflow; that shell script writes the historical evidence paths and is not the WorkBuddy entry point. Preserve those original reports/logs, including their old source digest and pre-publication statements. Current repository-workflow checks are recorded separately under [evidence/repository-workflow/](evidence/repository-workflow/README.md), and every Windows run writes its own ignored `artifacts/workbuddy-runs/<run>/` evidence. No historical Linux result establishes current Windows/Rhino execution.
+
+In a read-only-home container, manual checks may set `DOTNET_CLI_HOME`, `NUGET_PACKAGES` and `NUGET_HTTP_CACHE_PATH` to writable temporary directories. No change to the user's machine, network/security settings or account credentials is needed for these cloud checks.
 
 ## How to qualify in Rhino
 
-See [the live plugin runbook](src/RhinoAi.Plugin/LIVE-ACCEPTANCE.md) and [Host runbook](docs/host-runbook.md) for exact launch and UI steps. Install/load only when the user authorizes it on their Windows Rhino workstation. The provided source is not an installer and has not been installed on the user's computer.
+Start with [the Chinese WorkBuddy runbook](docs/WORKBUDDY.md), then consult [the live plugin matrix](src/RhinoAi.Plugin/LIVE-ACCEPTANCE.md) and [Host runbook](docs/host-runbook.md) for implementation details. Install/load only when the user authorizes it on their Windows Rhino workstation. The provided source is not an installer and has not been installed on the user's computer.
 
 Acceptance must cover Preview/Reject, accepted Commit, native Undo/Redo, manual copy and replace, document switch/close, save/reopen, checkpoint restore, lost acknowledgement, cancellation and failure recovery. Record the exact Rhino build, runtime, source digest and evidence. Chinese model/drawing-label rendering is not qualified here; the foundation uses ASCII labels and preserves a separate engineering identity.
 

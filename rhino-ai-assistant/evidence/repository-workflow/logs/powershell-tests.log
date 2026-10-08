@@ -1,0 +1,37 @@
+STARTED_UTC: 2026-10-08T03:15:04.3260381Z
+WORKING_DIRECTORY: /workspace/shared/workbuddy-repo-update/rhino-ai-assistant
+COMMAND: "/tmp/workbuddy-powershell-7.4.7/pwsh" "-NoProfile" "-NonInteractive" "-File" "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/scripts/test_workbuddy_powershell.ps1" "-TestRoot" "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/artifacts/workbuddy-runs/publication-validation-20261008/powershell-tests"
+STDOUT:
+PASS all shipped PowerShell scripts parse
+PASS source resolves from extracted parent with spaces and Unicode
+PASS source resolves from module and ignores current directory
+PASS missing source markers are rejected
+PASS artifact copies do not make source ambiguous
+PASS ambiguous extracted parents are rejected
+PASS default run names are unique and under module artifacts
+PASS relative run paths resolve against module
+PASS outside and traversal run paths are rejected
+PASS existing run evidence is never reused
+PASS JSON is UTF-8 without BOM
+[argument-probe] "/tmp/workbuddy-powershell-7.4.7/pwsh" "-NoProfile" "-NonInteractive" "-File" "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/artifacts/workbuddy-runs/publication-validation-20261008/powershell-tests/native probe.ps1" "-One" "path with spaces 测试" "-Two" "embedded\"quote" "-Three" "trailing\\"
+["path with spaces 测试","embedded\"quote","trailing\\"]
+stderr is captured as data
+[argument-probe] EXIT_CODE: 0
+PASS native arguments preserve spaces quotes backslashes and Unicode
+[failure-probe] "/tmp/workbuddy-powershell-7.4.7/pwsh" "-NoProfile" "-NonInteractive" "-File" "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/artifacts/workbuddy-runs/publication-validation-20261008/powershell-tests/native probe.ps1" "-ExitCode" "7"
+["","",""]
+stderr is captured as data
+[failure-probe] EXIT_CODE: 7
+PASS nonzero native exits fail immediately and preserve logs
+[gate-probe] "/tmp/workbuddy-powershell-7.4.7/pwsh" "-NoProfile" "-NonInteractive" "-File" "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/artifacts/workbuddy-runs/publication-validation-20261008/powershell-tests/native probe.ps1" "-ExitCode" "2"
+["","",""]
+stderr is captured as data
+[gate-probe] EXIT_CODE: 2
+PASS gate exit 2 is explicitly preserved rather than replaced with 0
+PASS duplicate command names never overwrite earlier logs
+PowerShell helpers: 15 PASS, 0 FAIL. Fixtures/logs preserved: /workspace/shared/workbuddy-repo-update/rhino-ai-assistant/artifacts/workbuddy-runs/publication-validation-20261008/powershell-tests
+
+STDERR:
+
+FINISHED_UTC: 2026-10-08T03:15:06.1210868Z
+EXIT_CODE: 0

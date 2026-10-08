@@ -1,0 +1,10 @@
+STARTED_UTC: 2026-10-08T03:14:58.9807485Z
+WORKING_DIRECTORY: /workspace/shared/workbuddy-repo-update/rhino-ai-assistant
+COMMAND: "/usr/bin/python3" "-Xutf8" "-c" "import sys; print(sys.version); raise SystemExit(0 if sys.version_info >= (3, 10) else 1)"
+STDOUT:
+3.13.5 (main, Aug 10 2026, 12:06:59) [GCC 14.2.0]
+
+STDERR:
+
+FINISHED_UTC: 2026-10-08T03:14:59.0208052Z
+EXIT_CODE: 0

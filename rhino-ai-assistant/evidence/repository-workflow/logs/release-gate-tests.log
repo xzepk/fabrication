@@ -1,0 +1,12 @@
+STARTED_UTC: 2026-10-08T03:15:04.0628062Z
+WORKING_DIRECTORY: /workspace/shared/workbuddy-repo-update/rhino-ai-assistant
+COMMAND: "/usr/bin/python3" "-Xutf8" "/workspace/shared/workbuddy-repo-update/rhino-ai-assistant/scripts/test_release_gate.py"
+STDOUT:
+PASS release gate rejects missing/not-run/fake/stale evidence and production promotion (40 assertions)
+PASS canonical digest: POSIX/Windows/shuffled paths, case, Unicode, UTF-8 and exclusions (42 assertions)
+PASS canonical digest preserves original 46-file Linux frozen baseline (1 assertion)
+
+STDERR:
+
+FINISHED_UTC: 2026-10-08T03:15:04.1207843Z
+EXIT_CODE: 0
