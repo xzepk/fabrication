@@ -119,6 +119,20 @@ public sealed class ExecutionCoordinator(IDocumentAdapter adapter, IUiDispatcher
             if (outcome.Added.Length != 1 || outcome.Modified.Length != 0 || outcome.Deleted.Length != 0 || outcome.After.Entities.Length != plan.Before.Entities.Length + 1 || outcome.After.Entities.Count(e => e.EntityId == plan.Request.EntityId && e.RhinoId == outcome.Added[0]) != 1) throw new HarnessException("effect-mismatch", "Actual created objects differ from approved plan.");
             foreach (var before in plan.Before.Entities) if (!outcome.After.Entities.Any(e => e.RhinoId == before.RhinoId && e.Fingerprint == before.Fingerprint)) throw new HarnessException("effect-mismatch", "Unrelated managed geometry changed.");
         }
+        else if (plan.Request.ToolId == "cladding.plates.add")
+        {
+            var plates = plan.Request.Plates ?? throw new HarnessException("effect-mismatch", "Approved plate batch is missing.");
+            var oldIds = plan.Before.Entities.Select(e => e.RhinoId).ToHashSet();
+            var actualAdded = outcome.After.Entities.Where(e => !oldIds.Contains(e.RhinoId)).ToArray();
+            if (outcome.Added.Length != plates.Length || outcome.Added.Distinct().Count() != plates.Length ||
+                outcome.Modified.Length != 0 || outcome.Deleted.Length != 0 || outcome.After.Entities.Length != plan.Before.Entities.Length + plates.Length ||
+                !actualAdded.Select(e => e.RhinoId).ToHashSet().SetEquals(outcome.Added) ||
+                !actualAdded.Select(e => e.EntityId).ToHashSet(StringComparer.Ordinal).SetEquals(plates.Select(p => p.EntityId)))
+                throw new HarnessException("effect-mismatch", "Actual plate identities/count differ from the exact approved batch.");
+            foreach (var before in plan.Before.Entities)
+                if (!outcome.After.Entities.Any(e => e.RhinoId == before.RhinoId && e.EntityId == before.EntityId && e.Fingerprint == before.Fingerprint))
+                    throw new HarnessException("effect-mismatch", "An existing managed object changed during plate creation.");
+        }
         else if (plan.Request.ToolId == "checkpoint.restore")
         {
             var target = plan.RestoreTarget ?? throw new HarnessException("invalid-restore", "Restore target is missing.");

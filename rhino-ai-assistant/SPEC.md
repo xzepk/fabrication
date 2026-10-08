@@ -1,8 +1,8 @@
 # Rhino AI Agent Harness — Product & Technical Specification
 
 > Status: Implementation baseline; production release blocked until stage gates pass  
-> Version: 0.2  
-> Updated: 2026-10-08; based on upstream commit `9561a0b929f9191e66230196d1be1d7453115aff`  
+> Version: 0.3
+> Updated: 2026-10-08; Stage 2 amendment to repository main `9e416f637cd54b20d309f8f78fbf087ddf368bc6`
 > Target: Rhino 8 / Windows first  
 > Repository module: `rhino-ai-assistant/`
 
@@ -1394,10 +1394,11 @@ Each result SHALL record environment, exact source/package/runtime versions, evi
 | F-10 | 1 | BeginUndoRecord returning 0, partial mutation, disk failure and crash during apply lead to documented recovery state; never a false success |
 | F-11 | 1 | Manual copy/replace/delete and undo/redo reconcile IDs; ambiguous split/join lineage is blocked |
 | F-12 | 1 | Automated race/cancel/partial-failure/replay/persist/restore regression and QA/release gate run |
-| S-01 | 2 | Existing Skill independence and unsupported-feature disclosure verified |
+| S-01 | 2 | Actual independent Skill subprocess, independence and unsupported-feature disclosure verified |
 | S-02 | 2 | Cladding task through Host, Rhino Preview/Commit and consistent model/drawing/BOM snapshot |
-| S-03 | 2 | Chinese glyph visual inspection or ASCII/pinyin + collision-safe ID map; no garbled delivery |
-| S-04 | 2 | Production approval remains separately gated; golden fixtures and actual effects validated |
+| S-03 | 2 | Final rendered-artifact readback: Chinese glyph inspection or ASCII/pinyin + collision-safe ID map; no garbled delivery |
+| S-04 | 2 | Actual canopy golden-fixture artifact readback, snapshot/ID/geometry/drawing/BOM consistency; production approval remains separately gated |
+| S-05 | 2 | Actual configured local-model request returns a grounded plan/clarification through the plugin workflow; synthetic HTTP fixtures do not qualify |
 
 ---
 
@@ -1499,7 +1500,7 @@ This showcase SHALL prove:
 2. Build Stage 1 Host, Contracts and real Rhino adapter in parallel against shared DTOs; add failure tests with the implementation.
 3. Run Linux headless tests and actual plugin compilation; separately run Windows/Rhino live acceptance when available.
 4. Review findings, repair recoverable code defects, re-run affected checks; keep remaining live gates blocked if Rhino is unavailable.
-5. Add the Stage 2 Skill scenario only after the Stage 1 execution/recovery foundation is accepted.
+5. Implement the Stage 2 local self-use candidate in parallel with deferred Windows qualification, as authorized on 2026-10-08. Keep every unexecuted Stage 1 live gate ON HOLD / NOT_RUN. Development continuation never grants Stage 1 acceptance or production release.
 6. Expand Stage 3 and 4 only after corresponding gates.
 
 No repository publication, installer execution on the user's computer, remote access grant or production release is implied by local implementation authorization.
@@ -1566,4 +1567,21 @@ Primary API references (checked 2026-10-08):
 - Persisted plugin/object metadata: https://developer.rhino3d.com/guides/rhinocommon/plugin-user-data/
 - Detached display preview: https://developer.rhino3d.com/en/guides/rhinocommon/display-conduits/
 
-This v0.2 is an amendment of the actual v0.1 repository spec, not a reconstructed replacement. Original sections 1–33 and 38–39 retain product architecture; sections 34–37 and 40–46 now define implementable stages and mandatory safety contracts.
+This v0.3 extends the actual v0.2 repository spec, not a reconstructed replacement. Original sections 1–33 and 38–39 retain product architecture; sections 34–37 and 40–46 now define implementable stages and mandatory safety contracts.
+
+
+# 47. Stage 2 First Local Integration Amendment (2026-10-08)
+
+The user authorized implementation to continue while Windows verification is on hold, requested both Host-direct and external-agent compatibility with Host-direct first, and then prioritized a single-machine self-use flow without provider or credential setup. This changes the development order in §40, not the technical or production release gates. This increment is a first integration candidate, not complete single-machine cladding automation. Unmanaged-source adoption and automatic panelization require separate design decisions; an unanswered scope question does not authorize broader geometry or manufacturing assumptions.
+
+- **Local execution:** Rhino plugin + authenticated loopback Host + the separately installed independent `cladding-delivery` package. Neither existing engineering Skill is merged, renamed, or made dependent on the Harness.
+- **Planning:** one bounded v2 decision: clarification, one allowlisted foundational tool, or a typed cladding-review proposal. Local Host-direct and external-agent validation consume the same versioned contract. There is no arbitrary code, shell, export path, unrestricted API, or model-selected executable.
+- **Model transport:** explicit literal loopback model endpoint and model identifier, process environment configuration, no provider account or credential management. Missing model configuration leaves structured local tools usable. HTTP fixture testing is protocol testing only; actual natural-language model qualification remains NOT_RUN until an actual local model is exercised.
+- **Engineering bridge:** at most 128 explicitly identified axis-aligned, unbent, unperforated rectangular planar plates. Each item has quantity 1, exact origin, explicit dimensions/material/grade, and traceable source identifiers. Broader existing Skill capabilities do not imply that the Rhino bridge supports them. No box substitution for tubes, folds, holes, returns, cutouts, rotated/curved source geometry, or unimplemented manufacturing semantics.
+- **Engineering values:** design, measured and adopted values remain distinct. Missing consequential dimensions, materials, adoption decisions, selected targets, or process parameters require clarification. No inferred fabrication defaults.
+- **Review outputs:** a real controlled Skill subprocess produces/read-checks STEP geometry, review drawings, BOM and explicit nesting status from one immutable input. Job identity, input snapshot, source/provenance, rule/Skill version, entity IDs and file hashes bind the output package and exact Rhino preview request. Partial, unsafe, changed, mixed-revision or stale outputs must not be reported as complete/current.
+- **Adoption:** explicit viewport preview and confirmation, one owned Undo record, same preconditions/compensation/journal protection as Stage 1. File generation and model adoption are distinct effects; Rhino Undo does not delete external files. Old packages are historical and cannot be silently reused as the current model deliverables after a model/context change.
+- **Readability:** use collision-safe ASCII drawing labels with reversible Unicode identity metadata unless final rendered Chinese glyph inspection has actually passed.
+- **Qualification:** compiled source and headless integration may be PASS while Windows/Rhino and actual-model rows remain NOT_RUN/ON HOLD. All packages remain REVIEW, manufacturing NOT_RELEASED. Stages 3/4, Code Mode, Vision, Grasshopper, branching and team services are outside this amendment.
+
+Stage 2 candidate evidence must distinguish: planner protocol-fixture tests; actual independent Skill subprocess and exported-artifact readback; real RhinoCommon/Eto compilation; Windows/Rhino live adoption; actual model-endpoint execution; and human engineering/manufacturing approval. A successful subset cannot stand in for the rest.

@@ -14,13 +14,17 @@ public static class Protocol
 }
 public sealed record Point3(double X, double Y, double Z);
 public sealed record BoxSpec(Point3 Origin, double Width, double Depth, double Height);
+/// <summary>Exact axis-aligned, unbent, unperforated rectangular plate in document units.</summary>
+public sealed record PlanarPlateSpec(string EntityId, BoxSpec Box, string Material);
+/// <summary>Immutable review provenance copied to every created managed plate.</summary>
+public sealed record PlateBatchProvenance(Guid JobId, string InputSnapshotHash, string JobHash, string ManifestHash, string SkillId, string SkillVersion, string RuleVersion, string SkillSourceHash);
 public sealed record EntitySnapshot(Guid RhinoId, string EntityId, string Fingerprint, string GeometryJson, string AttributesJson, string Kind, bool IsValid);
 public sealed record DocumentSnapshot(Guid DocumentId, Guid SessionId, long Revision, string Units, double Tolerance, EntitySnapshot[] Entities, string[] Issues)
 {
     public string SnapshotHash => Protocol.Hash(new { DocumentId, SessionId, Revision, Units, Tolerance, Entities });
 }
 public sealed record ExpectedContext(Guid DocumentId, Guid SessionId, long Revision, string SnapshotHash);
-public sealed record ToolRequest(int ProtocolVersion, Guid TaskId, Guid OperationId, string ToolId, ExpectedContext Expected, BoxSpec? Box = null, Guid? ObjectId = null, Point3? Translation = null, string? EntityId = null, Guid? CheckpointId = null);
+public sealed record ToolRequest(int ProtocolVersion, Guid TaskId, Guid OperationId, string ToolId, ExpectedContext Expected, BoxSpec? Box = null, Guid? ObjectId = null, Point3? Translation = null, string? EntityId = null, Guid? CheckpointId = null, [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] PlanarPlateSpec[]? Plates = null, [property: JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)] PlateBatchProvenance? Provenance = null);
 public sealed record ChangePlan(ToolRequest Request, string RequestHash, DocumentSnapshot Before, string Summary, string[] Warnings, Checkpoint? RestoreTarget = null);
 public enum OperationState { Prepared, Applying, Committed, Cancelled, Rejected, FailedRecovery }
 public sealed record Checkpoint(Guid CheckpointId, Guid DocumentId, DateTimeOffset CreatedAt, DocumentSnapshot Snapshot, string Scope = "managed-objects");

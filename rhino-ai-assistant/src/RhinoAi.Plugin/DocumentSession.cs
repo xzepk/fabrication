@@ -15,6 +15,7 @@ internal sealed class DocumentSession : IDisposable
     public JsonOperationStore Store { get; }
     public string DirectoryPath { get; }
     public ChangePlan? Pending { get; set; }
+    public Guid[]? PendingSelection { get; set; }
     public Guid? LastOperationId { get; set; }
     public SemaphoreSlim UiGate { get; } = new(1, 1);
     private readonly CancellationTokenSource _lifetime = new();
@@ -68,6 +69,16 @@ internal sealed class DocumentSession : IDisposable
     {
         var dir = Path.Combine(DirectoryPath, "checkpoints");
         return Directory.Exists(dir) ? Directory.GetFiles(dir, "*.json").Select(path => JsonSerializer.Deserialize<Checkpoint>(File.ReadAllText(path), Protocol.Json) ?? throw new IOException("Invalid checkpoint file.")).OrderByDescending(x => x.CreatedAt).ToArray() : [];
+    }
+    public Guid[] SelectedManagedObjects()
+    {
+        RhinoUiDispatcher.RequireUiThread();
+        var snapshot = Adapter.Capture();
+        var doc = RhinoDoc.FromRuntimeSerialNumber(Adapter.RuntimeSerial) ?? throw new HarnessException("document-closed", "Document closed.");
+        var selected = doc.Objects.GetSelectedObjects(false, false).Select(o => o.Id).Order().ToArray();
+        if (selected.Any(id => !snapshot.Entities.Any(e => e.RhinoId == id && e.IsValid)))
+            throw new HarnessException("unsupported-selection", "Selection contains geometry outside the supported managed-box scope. Clear it or select managed boxes only.");
+        return selected;
     }
     public Guid? SelectedManagedObject()
     {

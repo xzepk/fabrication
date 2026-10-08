@@ -48,7 +48,13 @@ public static class StrictJson
         CheckNoDuplicateProperties(json.RootElement);
         return json.RootElement.Deserialize<T>(Options) ?? throw new JsonException("A JSON object is required.");
     }
-    private static void CheckNoDuplicateProperties(JsonElement element)
+    public static T Parse<T>(string text)
+    {
+        using var json = JsonDocument.Parse(text, new JsonDocumentOptions { MaxDepth = 32 });
+        CheckNoDuplicateProperties(json.RootElement);
+        return json.RootElement.Deserialize<T>(Options) ?? throw new JsonException("A JSON object is required.");
+    }
+    public static void CheckNoDuplicateProperties(JsonElement element)
     {
         if (element.ValueKind == JsonValueKind.Object)
         {

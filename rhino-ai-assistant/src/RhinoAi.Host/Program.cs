@@ -9,10 +9,14 @@ using RhinoAi.Host;
 
 HostSettings settings;
 HostJournal journal;
+LocalModelSettings modelSettings;
+CladdingAdapterSettings claddingSettings;
 try
 {
     if (args.Length != 0) throw new InvalidOperationException("Configure the host through its documented environment variables only.");
     settings = HostSettings.FromEnvironment();
+    modelSettings = LocalModelSettings.FromEnvironment();
+    claddingSettings = CladdingAdapterSettings.FromEnvironment(settings.StateDirectory);
     journal = new HostJournal(settings.StateDirectory);
 }
 catch (Exception)
@@ -23,6 +27,9 @@ catch (Exception)
 }
 using (journal)
 {
+    using var localModel = new LocalChatCompletionClient(modelSettings);
+    var planner = new BoundedPlanner(localModel);
+    using var cladding = new CladdingReviewService(claddingSettings);
     var builder = WebApplication.CreateSlimBuilder(new WebApplicationOptions { Args = [] });
     builder.Configuration.Sources.Clear();
     builder.Logging.ClearProviders();
@@ -69,13 +76,56 @@ using (journal)
         catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested) { }
         catch (Exception) { await WriteError(context, 500, "internal_error", "The operation failed. Inspect its stored status before retrying; no automatic replay is allowed."); }
     });
-    app.MapGet("/health", () => { journal.CheckHealth(); return Results.Json(new { status = "ok", protocolVersion = Protocol.Version, mode = "deterministic-structured-tools", tools = new[] { "box.add", "object.translate", "checkpoint.restore" }, reviewStatus = "REVIEW" }, StrictJson.Options); });
+    app.MapGet("/health", () => { journal.CheckHealth(); return Results.Json(new { status = "ok", protocolVersion = Protocol.Version, mode = "local-bounded-planner-and-structured-tools", plannerVersion = PlanningProtocol.Version, plannerStatus = localModel.Status, tools = new[] { "box.add", "object.translate", "checkpoint.restore", "cladding.plates.add" }, reviewStatus = "REVIEW" }, StrictJson.Options); });
+    app.MapGet("/v2/capabilities", () => Results.Json(new
+    {
+        plannerVersion = PlanningProtocol.Version, toolProtocolVersion = Protocol.Version,
+        transport = "authenticated-literal-loopback", reviewStatus = "REVIEW", manufacturingRelease = false,
+        tools = new[] { "box.add", "object.translate", "checkpoint.restore", "cladding.plates.add" },
+        planner = new
+        {
+            status = localModel.Status, adapter = "local-chat-completions", endpointPolicy = "literal-http-127.0.0.1-only",
+            decisions = new[] { "clarification", "tool", "cladding.review" }, tools = new[] { "box.add", "object.translate" },
+            maximumTurns = 1, maximumConcurrentRequests = 1,
+            maximumPromptCharacters = LocalModelSettings.MaximumPromptChars,
+            maximumContextObjects = LocalModelSettings.MaximumContextObjects, maximumSelectedObjects = LocalModelSettings.MaximumSelectedObjects,
+            maximumInputTextUtf8Bytes = LocalModelSettings.MaximumInputTextBytes, maximumCompletionTokens = LocalModelSettings.MaximumOutputTokens,
+            maximumRequestBytes = LocalModelSettings.MaximumRequestBytes, maximumResponseBytes = LocalModelSettings.MaximumResponseBytes,
+            timeoutSeconds = (int)LocalModelSettings.MaximumTimeout.TotalSeconds,
+            readOnlyContext = new[] { "documentId", "sessionId", "revision", "snapshotHash", "units", "tolerance", "selectedObjectIds", "entity.rhinoId", "entity.entityId", "entity.kind" },
+            geometryOrAttributeUpload = false, arbitraryCode = false, automaticRetry = false, redirects = false,
+            credentials = false, requiresExplicitPreviewAcceptance = true
+        },
+        cladding = cladding.Capabilities()
+    }, StrictJson.Options));
     app.MapPost("/v1/prepare", async (HttpContext context) =>
     {
         var input = await StrictJson.ReadAsync<PrepareRequest>(context.Request, context.RequestAborted);
         ValidateRequiredPrepare(input);
+        if (input.Request.ToolId == "cladding.plates.add") cladding.ValidateAdoption(input);
         var plan = PlanValidator.Prepare(input);
         return Results.Json(journal.Prepare(plan), StrictJson.Options);
+    });
+    app.MapPost("/v2/plan", async (HttpContext context) =>
+    {
+        var input = await StrictJson.ReadAsync<PlannerRequest>(context.Request, context.RequestAborted);
+        return Results.Json(await planner.PlanAsync(input, context.RequestAborted), StrictJson.Options);
+    });
+    app.MapPost("/v2/plan/validate", async (HttpContext context) =>
+    {
+        var input = await StrictJson.ReadAsync<PlannerValidationRequest>(context.Request, context.RequestAborted);
+        return Results.Json(BoundedPlanner.Validate(input.Request, input.Decision), StrictJson.Options);
+    });
+    app.MapPost("/v2/cladding/review", async (HttpContext context) =>
+    {
+        var input = await StrictJson.ReadAsync<CladdingReviewRequest>(context.Request, context.RequestAborted);
+        return Results.Json(await cladding.RunAsync(input, context.RequestAborted), StrictJson.Options);
+    });
+    app.MapGet("/v2/cladding/reviews/{id}", (string id) =>
+    {
+        if (!Guid.TryParseExact(id, "D", out var jobId) || jobId == Guid.Empty)
+            throw new HostHttpException(400, "invalid_id", "Use a nonempty review UUID in canonical hyphenated format.");
+        return Results.Json(cladding.Get(jobId), StrictJson.Options);
     });
     app.MapGet("/v1/operations/{id}", (string id) =>
     {
@@ -88,6 +138,11 @@ using (journal)
         var input = await StrictJson.ReadAsync<CompleteRequest>(context.Request, context.RequestAborted);
         if (input.OperationId == Guid.Empty || string.IsNullOrWhiteSpace(input.RequestHash))
             throw new HostHttpException(400, "invalid_completion", "Operation ID and request hash are required.");
+        if (input.State == OperationState.Applying)
+        {
+            var record = journal.Get(input.OperationId);
+            if (record.Plan.Request.ToolId == "cladding.plates.add") cladding.ValidateForApply(record.Plan);
+        }
         return Results.Json(journal.Complete(input), StrictJson.Options);
     });
     try

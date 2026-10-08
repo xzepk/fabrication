@@ -24,10 +24,13 @@ try {
     $pythonPrefix = @($pythonTool.Prefix) + @('-Xutf8')
     $null = Invoke-WorkbuddyCommand -Context $context -Name 'verify-run' -Executable $pythonTool.Executable -Arguments ($pythonPrefix + @((Join-Path $source 'scripts/workbuddy_evidence.py'), 'verify-run', '--source-root', $source, '--run-root', $run)) -WorkingDirectory $source
     $gate = Invoke-WorkbuddyCommand -Context $context -Name 'release-gate' -Executable $pythonTool.Executable -Arguments ($pythonPrefix + @((Join-Path $source 'scripts/release_gate.py'), (Join-Path $run 'acceptance.local.json'), '--source-root', $source)) -WorkingDirectory $source -AllowedExitCodes @(0, 2)
-    Write-WorkbuddyJson -Path (Join-Path $verification 'verification-result.json') -Value ([ordered]@{ source_root = $source; run_root = $run; release_gate_exit_code = $gate.ExitCode; production_status = 'REVIEW' })
+    $stage2Gate = Invoke-WorkbuddyCommand -Context $context -Name 'stage2-release-gate' -Executable $pythonTool.Executable -Arguments ($pythonPrefix + @((Join-Path $source 'scripts/stage2_gate.py'), (Join-Path $run 'acceptance.stage2.json'), '--source-root', $source)) -WorkingDirectory $source -AllowedExitCodes @(0, 2)
+    $combinedExit = [Math]::Max($gate.ExitCode, $stage2Gate.ExitCode)
+    Write-WorkbuddyJson -Path (Join-Path $verification 'verification-result.json') -Value ([ordered]@{ source_root = $source; run_root = $run; release_gate_exit_code = $gate.ExitCode; stage2_gate_exit_code = $stage2Gate.ExitCode; production_status = 'REVIEW' })
     Write-Host "Verification logs: $verification"
     if ($gate.ExitCode -eq 2) { Write-Host 'STAGE 1 RELEASE BLOCKED. Verification exits 2; this is not a green release check.' }
-    exit $gate.ExitCode
+    if ($stage2Gate.ExitCode -eq 2) { Write-Host 'STAGE 2 QUALIFICATION BLOCKED. A passing build or fixture never overrides missing model/Rhino qualification.' }
+    exit $combinedExit
 } catch {
     $message = $_.Exception.Message
     if ($null -ne $context) { Write-WorkbuddyUtf8 -Path (Join-Path $context.Root 'failure.txt') -Text ("FAILED: $message`nOriginal run evidence was preserved.`n") }

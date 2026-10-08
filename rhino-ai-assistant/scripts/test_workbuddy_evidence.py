@@ -7,6 +7,7 @@ import tempfile
 import unittest
 
 import workbuddy_evidence as evidence
+import stage2_evidence
 
 
 class EvidenceTests(unittest.TestCase):
@@ -32,6 +33,7 @@ class EvidenceTests(unittest.TestCase):
         for folder, files in (('host', evidence.HOST_FILES), ('plugin', evidence.PLUGIN_FILES)):
             (self.run / 'candidate' / folder).mkdir(parents=True)
             for name in files:
+                (self.run / 'candidate' / folder / name).parent.mkdir(parents=True, exist_ok=True)
                 (self.run / 'candidate' / folder / name).write_bytes(b'fixture; not a real binary')
 
     def init(self):
@@ -46,6 +48,26 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(len(evidence.read_json(self.run / 'live-cases.json')['cases']), 20)
         evidence.verify_run(self.root, self.run)
         self.assertFalse((self.run / 'acceptance.local.json').read_bytes().startswith(b'\xef\xbb\xbf'))
+
+    def test_stage2_without_real_skill_preserves_unexecuted_gates(self):
+        self.init()
+        report = stage2_evidence.create_report(self.root, self.run)
+        self.assertFalse(report['manufacturing_release'])
+        self.assertEqual(report['stage2_qualification'], 'BLOCKED')
+        self.assertTrue(all(report['checks'][name]['status'] == 'NOT_RUN'
+                            for name in ('S-01', 'S-02', 'S-03', 'S-04', 'S-05')))
+        with self.assertRaises(FileExistsError):
+            stage2_evidence.create_report(self.root, self.run)
+
+    def test_stage2_rejects_canopy_outside_this_run(self):
+        self.init()
+        process = self.run / 'cladding-process'
+        process.mkdir()
+        evidence.write_json(process / 'cladding-results.json',
+                            {'failed': 0, 'passed': 14, 'realSkill': 'PASS',
+                             'canopyJob': 'fixture', 'canopyOutputDirectory': str(self.root / 'outside')})
+        with self.assertRaisesRegex(ValueError, 'outside'):
+            stage2_evidence.create_report(self.root, self.run)
 
     def test_source_tampering_detected(self):
         self.init()

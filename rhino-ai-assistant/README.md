@@ -1,8 +1,8 @@
-# Rhino AI Agent Harness — Stage 1 implementation candidate
+# Rhino AI Agent Harness — Stage 2 first integration candidate
 
-**Status: REVIEW. Not a production release. Live Windows/Rhino acceptance has not run.**
+**Status: Stage 2 first integration candidate, REVIEW. This is not complete single-machine cladding automation or a production release. Live Windows/Rhino acceptance has not run.**
 
-This module implements the first slice of the existing [product specification](SPEC.md), revised to v0.2 from upstream commit `9561a0b929f9191e66230196d1be1d7453115aff`. It does not replace or merge the independent `cladding-delivery` and `cad-fabrication-engineering-v3` packages.
+This module extends the foundational slice with the local self-use candidate in [specification v0.3](SPEC.md). Stage 2 development continues with Windows/Rhino qualification explicitly on hold. It does not replace or merge the independent `cladding-delivery` and `cad-fabrication-engineering-v3` packages.
 
 ## WorkBuddy: start from this repository
 
@@ -26,6 +26,10 @@ The build script verifies the committed [repository-workflow source manifest](ev
 
 A successful build exits 0 for build/headless tests and separately records the initial gate exit code in `build-result.json`. The verifier preserves previous gate logs and never overwrites historical acceptance. **Exit 2 / BLOCKED is expected until required live Rhino checks are actually completed.** Missing debugger/fault-injection capability blocks L-15/L-16/L-18 and the affected gates; ordinary GUI checks can still proceed. Build success is not installation, live acceptance, or production approval. No compiled candidate binaries are committed.
 
+## Supported first integration and remaining everyday-workflow gaps
+
+Selected-source intake currently requires already managed, verified axis-aligned boxes. Arbitrary existing unmanaged Rhino geometry or original DWG interpretation/adoption is not implemented. Automatic panelization is not implemented. A genuine broader everyday workflow still needs an explicit design for source recognition/adoption and panelization, plus actual Windows/Rhino and local-model qualification. Do not replace these gaps with bounding-box simplification or manufacturing assumptions.
+
 ## What is implemented
 
 - Actual C# RhinoCommon/Eto plugin project, with floating and dockable entry points, document-bound adapter and detached display preview.
@@ -36,7 +40,7 @@ A successful build exits 0 for build/headless tests and separately records the i
 - Per-object engineering IDs, copy-collision detection, manual edit and Undo/Redo invalidation, saved document identity and explicit save/reopen qualification steps.
 - Automated fault-injection and HTTP integration tests, plus a fail-closed technical release gate.
 
-This is a structured-tool foundation. Natural-language LLM planning, cladding integration, general modeling tool coverage, drawing/BOM/nesting output, general Revert/merge, arbitrary code execution and production approval are **not implemented** in this stage.
+Stage 2 adds bounded local-model planning and the independent cladding planar-plate review workflow. See [local self-use](docs/STAGE2-LOCAL.md) for exact contracts, configuration, supported geometry and honest verification status. Actual local-model and Windows/Rhino execution remain NOT_RUN unless new evidence explicitly records otherwise. General modeling, complex cladding features, general Revert/merge, arbitrary code execution and production approval are not implemented.
 
 ## Project layout
 
@@ -78,7 +82,7 @@ These commands do not perform live acceptance. Run `workbuddy-verify.ps1` agains
 
 `DOTNET=/path/to/dotnet bash scripts/publish-windows.sh` cross-builds the framework-dependent Windows Host and collects the separately built plugin; its separate `packages.win-x64.lock.json` files preserve the normal build locks. Windows execution is still unqualified.
 
-The original `scripts/verify.sh` and `evidence/acceptance.json` belong to the earlier Linux validation workflow; that shell script writes the historical evidence paths and is not the WorkBuddy entry point. Preserve those original reports/logs, including their old source digest and pre-publication statements. Current repository-workflow checks are recorded separately under [evidence/repository-workflow/](evidence/repository-workflow/README.md), and every Windows run writes its own ignored `artifacts/workbuddy-runs/<run>/` evidence. No historical Linux result establishes current Windows/Rhino execution.
+The original `scripts/verify.sh` and `evidence/acceptance.json` belong to the earlier Linux validation workflow; that shell script writes the historical evidence paths and is not the WorkBuddy entry point. Preserve those original reports/logs, including their old source digest and pre-publication statements. Earlier repository-workflow checks remain historical under [evidence/repository-workflow/](evidence/repository-workflow/README.md); its source manifest alone tracks current source bytes, and every Windows run writes its own ignored `artifacts/workbuddy-runs/<run>/` evidence. No historical Linux result establishes current Windows/Rhino execution.
 
 In a read-only-home container, manual checks may set `DOTNET_CLI_HOME`, `NUGET_PACKAGES` and `NUGET_HTTP_CACHE_PATH` to writable temporary directories. No change to the user's machine, network/security settings or account credentials is needed for these cloud checks.
 

@@ -1,0 +1,509 @@
+{
+  "type": "object",
+  "properties": {
+    "protocolVersion": {
+      "const": 1
+    },
+    "jobId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "expected": {
+      "type": "object",
+      "properties": {
+        "documentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "snapshotHash": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "documentId",
+        "sessionId",
+        "revision",
+        "snapshotHash"
+      ],
+      "additionalProperties": false
+    },
+    "snapshot": {
+      "type": "object",
+      "properties": {
+        "documentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "units": {
+          "const": "Millimeters"
+        },
+        "tolerance": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rhinoId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "entityId": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+              },
+              "fingerprint": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "geometryJson": {
+                "type": "string",
+                "minLength": 1
+              },
+              "attributesJson": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "type": "string"
+              },
+              "isValid": {
+                "const": true
+              }
+            },
+            "required": [
+              "rhinoId",
+              "entityId",
+              "fingerprint",
+              "geometryJson",
+              "attributesJson",
+              "kind",
+              "isValid"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 10000
+        },
+        "issues": {
+          "type": "array",
+          "maxItems": 0
+        },
+        "snapshotHash": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        }
+      },
+      "required": [
+        "documentId",
+        "sessionId",
+        "revision",
+        "units",
+        "tolerance",
+        "entities",
+        "issues",
+        "snapshotHash"
+      ],
+      "additionalProperties": false
+    },
+    "sourceMode": {
+      "enum": [
+        "explicit_design",
+        "selected_managed"
+      ]
+    },
+    "selectedEntityIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "maxItems": 128
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "fingerprint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "boxMM": {
+            "type": "object",
+            "properties": {
+              "origin": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "type": "number",
+                    "minimum": -10000000,
+                    "maximum": 10000000
+                  },
+                  "y": {
+                    "type": "number",
+                    "minimum": -10000000,
+                    "maximum": 10000000
+                  },
+                  "z": {
+                    "type": "number",
+                    "minimum": -10000000,
+                    "maximum": 10000000
+                  }
+                },
+                "required": [
+                  "x",
+                  "y",
+                  "z"
+                ],
+                "additionalProperties": false
+              },
+              "width": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 100000
+              },
+              "depth": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 100000
+              },
+              "height": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "maximum": 100000
+              }
+            },
+            "required": [
+              "origin",
+              "width",
+              "depth",
+              "height"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "entityId",
+          "fingerprint",
+          "boxMM"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 128
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+          },
+          "displayLabel": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "originMM": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number",
+                "minimum": -10000000,
+                "maximum": 10000000
+              },
+              "y": {
+                "type": "number",
+                "minimum": -10000000,
+                "maximum": 10000000
+              },
+              "z": {
+                "type": "number",
+                "minimum": -10000000,
+                "maximum": 10000000
+              }
+            },
+            "required": [
+              "x",
+              "y",
+              "z"
+            ],
+            "additionalProperties": false
+          },
+          "widthMM": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 100000
+          },
+          "heightMM": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 100000
+          },
+          "thicknessMM": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 100000
+          },
+          "material": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "grade": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "densityKgM3": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 30000
+          },
+          "quantity": {
+            "const": 1
+          },
+          "sourceEntityIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+            },
+            "maxItems": 1
+          },
+          "measurements": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "field": {
+                      "enum": [
+                        "widthMM",
+                        "heightMM",
+                        "thicknessMM"
+                      ]
+                    },
+                    "designValueMM": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 100000
+                    },
+                    "measuredValueMM": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 100000
+                    },
+                    "usedValueMM": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 100000
+                    },
+                    "adoptionBasis": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 128
+                    }
+                  },
+                  "required": [
+                    "field",
+                    "designValueMM",
+                    "measuredValueMM",
+                    "usedValueMM",
+                    "adoptionBasis"
+                  ],
+                  "additionalProperties": false
+                },
+                "maxItems": 3
+              }
+            ]
+          },
+          "features": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "maxItems": 0
+              }
+            ]
+          },
+          "geometryType": {
+            "const": "planar_plate"
+          },
+          "plane": {
+            "enum": [
+              "XY",
+              "XZ",
+              "YZ"
+            ]
+          }
+        },
+        "required": [
+          "entityId",
+          "displayLabel",
+          "originMM",
+          "widthMM",
+          "heightMM",
+          "thicknessMM",
+          "material",
+          "grade",
+          "densityKgM3",
+          "quantity",
+          "sourceEntityIds"
+        ],
+        "additionalProperties": false
+      },
+      "maxItems": 128,
+      "minItems": 1
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "step",
+          "drawings",
+          "bom",
+          "nesting"
+        ]
+      }
+    },
+    "stock": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "widthMM": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100000
+            },
+            "heightMM": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 100000
+            },
+            "gapMM": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100000
+            },
+            "edgeMarginMM": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100000
+            },
+            "processConfirmed": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "widthMM",
+            "heightMM",
+            "gapMM",
+            "edgeMarginMM",
+            "processConfirmed"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "evidence": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sourceDrawingSha256": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^[A-Fa-f0-9]{64}$"
+                }
+              ]
+            },
+            "designBasis": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "assumptions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "maxItems": 64
+            }
+          },
+          "required": [
+            "sourceDrawingSha256",
+            "designBasis",
+            "assumptions"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "required": [
+    "protocolVersion",
+    "jobId",
+    "expected",
+    "snapshot",
+    "sourceMode",
+    "selectedEntityIds",
+    "sources",
+    "components",
+    "targets"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rhino-ai:cladding-review-request:v1",
+  "title": "Explicit rectangular plate review request",
+  "description": "Runtime strict DTO validation additionally enforces source/snapshot identity, exact design and used dimensions, tolerance, portable case-insensitive IDs, adoption basis, object count, and stock geometry."
+}

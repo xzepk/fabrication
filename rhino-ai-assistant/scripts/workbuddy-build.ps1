@@ -15,6 +15,7 @@ param(
     [string]$RunRoot,
     [string]$Dotnet = 'dotnet',
     [string]$Python,
+    [string]$SkillPython,
     [string]$SourceCommit,
     [switch]$CrossBuild
 )
@@ -47,6 +48,16 @@ try {
     $null = Invoke-WorkbuddyCommand -Context $context -Name 'core-tests' -Executable $dotnetExe -Arguments @((Join-Path $source 'tests/RhinoAi.Core.Tests/bin/Release/net8.0/RhinoAi.Core.Tests.dll')) -WorkingDirectory $source
     $hostDll = Join-Path $source 'src/RhinoAi.Host/bin/Release/net8.0/RhinoAi.Host.dll'
     $null = Invoke-WorkbuddyCommand -Context $context -Name 'host-tests' -Executable $dotnetExe -Arguments @((Join-Path $source 'tests/RhinoAi.Host.IntegrationTests/bin/Release/net8.0/RhinoAi.Host.IntegrationTests.dll'), $dotnetExe, $hostDll, (Join-Path $run 'host-integration')) -WorkingDirectory $source
+    $null = Invoke-WorkbuddyCommand -Context $context -Name 'planner-tests' -Executable $dotnetExe -Arguments @((Join-Path $source 'tests/RhinoAi.Planning.Tests/bin/Release/net8.0/RhinoAi.Planning.Tests.dll'), (Join-Path $run 'planner-results.json'), $dotnetExe, $hostDll) -WorkingDirectory $source
+    $claddingTestDll = Join-Path $source 'tests/RhinoAi.Cladding.Tests/bin/Release/net8.0/RhinoAi.Cladding.Tests.dll'
+    $null = Invoke-WorkbuddyCommand -Context $context -Name 'cladding-contract-tests' -Executable $dotnetExe -Arguments @($claddingTestDll, $source, (Join-Path $run 'cladding-contract')) -WorkingDirectory $source
+    if ($SkillPython) {
+        $skillExe = Resolve-WorkbuddyExecutable -Name $SkillPython
+        $null = Invoke-WorkbuddyCommand -Context $context -Name 'cladding-process-tests' -Executable $dotnetExe -Arguments @($claddingTestDll, $source, (Join-Path $run 'cladding-process'), $skillExe) -WorkingDirectory $source
+    } else {
+        Write-Host 'Actual independent Skill process tests: NOT_RUN. Supply -SkillPython with an approved runtime containing the independent Skill dependencies.'
+    }
+    $null = Invoke-WorkbuddyCommand -Context $context -Name 'stage2-gate-tests' -Executable $pythonTool.Executable -Arguments ($pythonPrefix + @((Join-Path $source 'scripts/test_stage2_gate.py'))) -WorkingDirectory $source
     $null = Invoke-WorkbuddyCommand -Context $context -Name 'release-gate-tests' -Executable $pythonTool.Executable -Arguments ($pythonPrefix + @((Join-Path $source 'scripts/test_release_gate.py'))) -WorkingDirectory $source
     $null = Invoke-WorkbuddyCommand -Context $context -Name 'workbuddy-evidence-tests' -Executable $pythonTool.Executable -Arguments ($pythonPrefix + @((Join-Path $source 'scripts/test_workbuddy_evidence.py'))) -WorkingDirectory $source
     $powershellName = 'pwsh'
@@ -65,17 +76,19 @@ try {
         if (-not (Test-Path -LiteralPath $inputFile -PathType Leaf)) { throw "Required plugin file is missing: $inputFile" }
         Copy-Item -LiteralPath $inputFile -Destination (Join-Path $pluginOutput $name) -ErrorAction Stop
     }
-    foreach ($name in @('RhinoAi.Host.exe', 'RhinoAi.Host.dll', 'RhinoAi.Host.deps.json', 'RhinoAi.Host.runtimeconfig.json', 'RhinoAi.Core.dll', 'RhinoAi.Contracts.dll')) {
+    foreach ($name in @('RhinoAi.Host.exe', 'RhinoAi.Host.dll', 'RhinoAi.Host.deps.json', 'RhinoAi.Host.runtimeconfig.json', 'RhinoAi.Core.dll', 'RhinoAi.Contracts.dll', 'adapters/cladding/run.py', 'adapters/cladding/capabilities.json', 'adapters/cladding/request.schema.json')) {
         if (-not (Test-Path -LiteralPath (Join-Path $hostOutput $name) -PathType Leaf)) { throw "Required framework-dependent Host file is missing: $name" }
     }
     $initArguments = $pythonPrefix + @($helper, 'init', '--source-root', $source, '--run-root', $run)
     if ($commit) { $initArguments += @('--source-commit', $commit) }
     $null = Invoke-WorkbuddyCommand -Context $context -Name 'evidence-init' -Executable $pythonTool.Executable -Arguments $initArguments -WorkingDirectory $source
     $gate = Invoke-WorkbuddyCommand -Context $context -Name 'release-gate' -Executable $pythonTool.Executable -Arguments ($pythonPrefix + @((Join-Path $source 'scripts/release_gate.py'), (Join-Path $run 'acceptance.local.json'), '--source-root', $source)) -WorkingDirectory $source -AllowedExitCodes @(0, 2)
+    $null = Invoke-WorkbuddyCommand -Context $context -Name 'stage2-evidence' -Executable $pythonTool.Executable -Arguments ($pythonPrefix + @((Join-Path $source 'scripts/stage2_evidence.py'), '--source-root', $source, '--run-root', $run)) -WorkingDirectory $source
+    $stage2Gate = Invoke-WorkbuddyCommand -Context $context -Name 'stage2-release-gate' -Executable $pythonTool.Executable -Arguments ($pythonPrefix + @((Join-Path $source 'scripts/stage2_gate.py'), (Join-Path $run 'acceptance.stage2.json'), '--source-root', $source)) -WorkingDirectory $source -AllowedExitCodes @(0, 2)
     Write-WorkbuddyJson -Path (Join-Path $run 'build-result.json') -Value ([ordered]@{
         build_and_headless_tests = 'PASS'; build_exit_code = 0; release_gate_exit_code = $gate.ExitCode
         release_status = $(if ($gate.ExitCode -eq 0) { 'TECHNICAL_ACCEPTANCE_PASSED' } else { 'BLOCKED' })
-        live_windows_rhino = 'NOT_RUN'; production_status = 'REVIEW'; cross_build = [bool]$CrossBuild
+        live_windows_rhino = 'NOT_RUN'; actual_local_model = 'NOT_RUN'; actual_skill_process = $(if ($SkillPython) { 'PASS' } else { 'NOT_RUN' }); stage2_qualification = 'BLOCKED'; stage2_gate_exit_code = $stage2Gate.ExitCode; manufacturing_release = $false; production_status = 'REVIEW'; cross_build = [bool]$CrossBuild
         source_root = $source; candidate = (Join-Path $run 'candidate'); acceptance = (Join-Path $run 'acceptance.local.json')
     })
     Write-Host "Build and headless tests: PASS. Candidate: $(Join-Path $run 'candidate')"

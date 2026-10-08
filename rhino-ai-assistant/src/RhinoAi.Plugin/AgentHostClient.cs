@@ -20,7 +20,7 @@ public sealed class AgentHostClient : IDisposable
             throw new HarnessException("host-endpoint", "Use an explicit http://127.0.0.1:port endpoint without credentials, query or path.");
         if (nonce.Length < 32 || nonce.Any(x => x < 33 || x > 126)) throw new HarnessException("host-nonce", "Host nonce must contain at least 32 printable ASCII characters.");
         Endpoint = endpoint;
-        _http = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false, UseProxy = false }) { BaseAddress = endpoint, Timeout = TimeSpan.FromSeconds(15) };
+        _http = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false, UseProxy = false }) { BaseAddress = endpoint, Timeout = Timeout.InfiniteTimeSpan };
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", nonce);
     }
     public static async Task<AgentHostClient> AttachAsync(Uri endpoint, string nonce, CancellationToken ct = default)
@@ -59,17 +59,34 @@ public sealed class AgentHostClient : IDisposable
     }
     public async Task HealthAsync(CancellationToken ct = default)
     {
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct); deadline.CancelAfter(TimeSpan.FromSeconds(15)); ct = deadline.Token;
         using var response = await _http.GetAsync("health", ct);
         await RequireSuccess(response, ct);
     }
+    public async Task<PlannerResponse> PlanAsync(PlannerRequest request, CancellationToken ct = default)
+    {
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct); deadline.CancelAfter(TimeSpan.FromSeconds(30)); ct = deadline.Token;
+        using var response = await _http.PostAsJsonAsync("v2/plan", request, Protocol.Json, ct);
+        await RequireSuccess(response, ct);
+        return await response.Content.ReadFromJsonAsync<PlannerResponse>(Protocol.Json, ct) ?? throw new HarnessException("host-response", "Host returned no planner result.");
+    }
+    public async Task<CladdingReviewResult> ReviewCladdingAsync(CladdingReviewRequest request, CancellationToken ct = default)
+    {
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct); deadline.CancelAfter(TimeSpan.FromSeconds(330)); ct = deadline.Token;
+        using var response = await _http.PostAsJsonAsync("v2/cladding/review", request, Protocol.Json, ct);
+        await RequireSuccess(response, ct);
+        return await response.Content.ReadFromJsonAsync<CladdingReviewResult>(Protocol.Json, ct) ?? throw new HarnessException("host-response", "Host returned no cladding review.");
+    }
     public async Task<ChangePlan> PrepareAsync(PrepareRequest request, CancellationToken ct = default)
     {
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct); deadline.CancelAfter(TimeSpan.FromSeconds(15)); ct = deadline.Token;
         using var response = await _http.PostAsJsonAsync("v1/prepare", request, Protocol.Json, ct);
         await RequireSuccess(response, ct);
         return await response.Content.ReadFromJsonAsync<ChangePlan>(Protocol.Json, ct) ?? throw new HarnessException("host-response", "Host returned no plan.");
     }
     public async Task<OperationRecord?> GetAsync(Guid id, CancellationToken ct = default)
     {
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct); deadline.CancelAfter(TimeSpan.FromSeconds(15)); ct = deadline.Token;
         using var response = await _http.GetAsync($"v1/operations/{id:D}", ct);
         if (response.StatusCode == HttpStatusCode.NotFound) return null;
         await RequireSuccess(response, ct);
@@ -77,6 +94,7 @@ public sealed class AgentHostClient : IDisposable
     }
     public async Task<OperationRecord> CompleteAsync(OperationRecord record, CancellationToken ct = default)
     {
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct); deadline.CancelAfter(TimeSpan.FromSeconds(15)); ct = deadline.Token;
         var body = new CompleteRequest(record.OperationId, record.RequestHash, record.State, record.Outcome, record.Error);
         using var response = await _http.PostAsJsonAsync("v1/complete", body, Protocol.Json, ct);
         await RequireSuccess(response, ct);

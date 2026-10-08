@@ -12,10 +12,10 @@ from release_gate import REQUIRED, LIVE, source_digest, source_entries
 
 MANIFEST = pathlib.Path('evidence/repository-workflow/source-manifest.json')
 REQUIRED_COMMANDS = ('source-verify', 'restore', 'build', 'core-tests', 'host-tests',
-                     'release-gate-tests', 'workbuddy-evidence-tests', 'publish-restore', 'publish')
+                     'release-gate-tests', 'workbuddy-evidence-tests', 'planner-tests', 'cladding-contract-tests', 'stage2-gate-tests', 'publish-restore', 'publish')
 PLUGIN_FILES = ('RhinoAi.Plugin.rhp', 'RhinoAi.Plugin.deps.json', 'RhinoAi.Core.dll', 'RhinoAi.Contracts.dll')
 HOST_FILES = ('RhinoAi.Host.exe', 'RhinoAi.Host.dll', 'RhinoAi.Host.deps.json',
-              'RhinoAi.Host.runtimeconfig.json', 'RhinoAi.Core.dll', 'RhinoAi.Contracts.dll')
+              'RhinoAi.Host.runtimeconfig.json', 'RhinoAi.Core.dll', 'RhinoAi.Contracts.dll', 'adapters/cladding/run.py', 'adapters/cladding/capabilities.json', 'adapters/cladding/request.schema.json')
 
 
 def read_json(path):
@@ -115,7 +115,8 @@ def init_run(root, run, source_commit=None):
                       'evidence': [relative(logs[x]) for x in ('core-tests', 'host-tests', 'release-gate-tests', 'workbuddy-evidence-tests')],
                       'reason': 'Actual automated Core, HTTP-process, release-gate and repository-evidence tests passed for this run. Live Rhino remains separate.'}
     report = {'schema_version': 1, 'verified_at_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
-              'candidate': 'rhino-ai-harness-stage1-repository-workflow',
+              'candidate': 'rhino-ai-harness-stage2-local-candidate',
+              'stage2_qualification': 'BLOCKED', 'actual_local_model': 'NOT_RUN', 'manufacturing_release': False,
               'source_digest': manifest['source_digest'], 'source_commit': source_commit,
               'source_commit_provenance': 'recorded checkout or supplied archive commit' if source_commit else 'UNKNOWN; preserve download provenance before live qualification',
               'production_status': 'REVIEW', 'stage1_release': 'BLOCKED', 'live_environment': {},

@@ -1,6 +1,6 @@
 # Local Agent Host runbook
 
-Status: implementation candidate, REVIEW. This host does not execute Rhino geometry, run a natural-language model, export files, or grant production approval. The Windows Rhino live acceptance rows in SPEC.md remain NOT_RUN until separately exercised in the pinned environment.
+Status: implementation candidate, REVIEW. The Host never mutates Rhino itself or grants production approval. Stage 2 adds an optional bounded local-model transport and an independent cladding subprocess that generates verified local review files; see [single-machine setup](STAGE2-LOCAL.md). The Windows Rhino live acceptance rows in SPEC.md remain NOT_RUN until separately exercised in the pinned environment.
 
 ## Components and protocol
 
@@ -9,7 +9,7 @@ Status: implementation candidate, REVIEW. This host does not execute Rhino geome
 - `src/RhinoAi.Contracts/Protocol.cs`: version 1 DTOs shared with the plugin.
 - `tests/RhinoAi.Host.IntegrationTests`: executable, dependency-free integration suite. It starts and kills actual HTTP host processes; it is not an in-memory server test.
 
-Only these HTTP routes exist:
+The foundational HTTP routes are:
 
 | Method | Route | Input | Output |
 | --- | --- | --- | --- |
@@ -20,7 +20,7 @@ Only these HTTP routes exist:
 
 Every route, including health, requires `Authorization: Bearer <session nonce>`. Responses that reach the application use `ApiError { code, message }` on failure. Invalid HTTP framing rejected before the application by Kestrel may use a transport-level error response.
 
-JSON property names are exact camelCase; unknown properties, duplicate keys, unknown protocol/tools, numeric operation enums, malformed values, and encoded bodies fail closed. The request limit is 1 MiB. There is no arbitrary-code, arbitrary-path export, public network, CORS, browser UI, or LLM endpoint.
+JSON property names are exact camelCase; unknown properties, duplicate keys, unknown protocol/tools, numeric operation enums, malformed values, and encoded bodies fail closed. The request limit is 1 MiB. The additional versioned planning/Skill routes are listed in [PROTOCOL.md](PROTOCOL.md). There is no arbitrary-code, arbitrary-path export, public network, CORS or browser UI endpoint.
 
 ## Pairing and startup
 

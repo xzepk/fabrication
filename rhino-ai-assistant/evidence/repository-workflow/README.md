@@ -1,8 +1,8 @@
-# Repository workflow verification, 2026-10-08
+# Historical Stage 1 repository workflow verification, 2026-10-08
 
-This is new evidence for the repository-only WorkBuddy workflow. The frozen current source is listed in [source-manifest.json](source-manifest.json). The old files one level above remain unchanged historical evidence for the earlier candidate and must not be relabeled as results for this source.
+The logs, acceptance report, counts and binary hashes in this directory are historical evidence for the earlier Stage 1 repository workflow. They are not results for the current Stage 2 source. Only [source-manifest.json](source-manifest.json) is maintained as the current repository source-byte verification manifest. Updating that manifest does not requalify these older logs. Fresh Stage 2 build/test reports are created under each unique ignored `artifacts/workbuddy-runs/<run>/` directory by [WORKBUDDY.md](../../docs/WORKBUDDY.md); see [the first-integration scope](../../docs/STAGE2-LOCAL.md). The old files one level above are historical as well.
 
-## Actual checks
+## Historical actual checks (not current Stage 2 qualification)
 
 - Linux .NET SDK 8.0.425: locked restore; Release build, 0 warnings and 0 errors; official pinned RhinoCommon/Eto compilation.
 - Core: 37/37 automated fake-adapter tests passed.

@@ -39,7 +39,7 @@ try
     await Test("wrong Content-Type rejected", async () => { await Status(await host.Client.PostAsync("v1/prepare", new StringContent("{}")), 415); });
     await Test("content-encoded body rejected", async () => { using var content = Json("{}"); content.Headers.ContentEncoding.Add("gzip"); await Status(await host.Client.PostAsync("v1/prepare", content), 415); });
     await Test("oversize Content-Length rejected", async () => { await Status(await host.Client.PostAsync("v1/prepare", Json(new string(' ', 1_048_577))), 413); });
-    await Test("oversize chunked body rejected", async () => { using var request = new HttpRequestMessage(HttpMethod.Post, "v1/prepare") { Content = Json(new string(' ', 1_048_577)) }; request.Headers.TransferEncodingChunked = true; await Status(await host.Client.SendAsync(request), 413); });
+    await Test("oversize chunked body rejected", async () => { await AssertChunkedLimit(host); });
     await Test("malformed JSON rejected", async () => { await Status(await host.Client.PostAsync("v1/prepare", Json("{oops")), 400); });
     await Test("null and missing required fields rejected", async () => { await Status(await host.Client.PostAsync("v1/prepare", Json("null")), 400); await Status(await host.Client.PostAsync("v1/prepare", Json("{}")), 400); });
     await Test("unknown JSON fields rejected", async () => { var body = JsonSerializer.SerializeToNode(Input(), Protocol.Json)!.AsObject(); body["arbitraryCode"] = "malicious()"; await Status(await host.Client.PostAsync("v1/prepare", Json(body.ToJsonString())), 400); });
@@ -88,6 +88,40 @@ var summary = new { schemaVersion = 1, timestamp = DateTimeOffset.UtcNow, enviro
 await File.WriteAllTextAsync(Path.Combine(evidenceDirectory, "results.json"), JsonSerializer.Serialize(summary, Protocol.Json));
 Console.WriteLine($"Host HTTP integration: {results.Count - failed} PASS, {failed} FAIL. Live Rhino: NOT_RUN.");
 return failed == 0 ? 0 : 1;
+
+// Read the actual HTTP status while uploading. HttpClient can surface a write-side
+// connection close before delivering Kestrel's early 413 for an oversized upload.
+// A transport exception alone is never accepted as proof of rejection.
+static async Task AssertChunkedLimit(HostProcess host)
+{
+    using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+    using var client = new TcpClient();
+    await client.ConnectAsync(IPAddress.Loopback, host.Port, timeout.Token);
+    using var stream = client.GetStream();
+    var headers = $"POST /v1/prepare HTTP/1.1\r\nHost: 127.0.0.1:{host.Port}\r\nAuthorization: Bearer {host.Nonce}\r\nContent-Type: application/json\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n";
+    await stream.WriteAsync(Encoding.ASCII.GetBytes(headers), timeout.Token);
+    var upload = Task.Run(async () =>
+    {
+        var bytes = Encoding.ASCII.GetBytes(new string(' ', 8192));
+        var remaining = 1_048_577;
+        while (remaining > 0)
+        {
+            var count = Math.Min(bytes.Length, remaining);
+            await stream.WriteAsync(Encoding.ASCII.GetBytes(count.ToString("X") + "\r\n"), timeout.Token);
+            await stream.WriteAsync(bytes.AsMemory(0, count), timeout.Token);
+            await stream.WriteAsync("\r\n"u8.ToArray(), timeout.Token);
+            remaining -= count;
+        }
+        await stream.WriteAsync("0\r\n\r\n"u8.ToArray(), timeout.Token);
+    });
+    using var reader = new StreamReader(stream, Encoding.ASCII, false, 1024, true);
+    var statusLine = await reader.ReadLineAsync(timeout.Token);
+    Assert(statusLine is not null && statusLine.StartsWith("HTTP/1.1 413 ", StringComparison.Ordinal), "Oversize upload did not return an actual HTTP 413 status.");
+    client.Close();
+    try { await upload; }
+    catch (Exception ex) when (ex is IOException or ObjectDisposedException or OperationCanceledException)
+    { /* The actual 413 was captured above; the rejected upload may be closed early. */ }
+}
 
 async Task Test(string name, Func<Task> action)
 {

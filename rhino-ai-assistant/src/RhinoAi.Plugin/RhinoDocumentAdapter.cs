@@ -28,6 +28,7 @@ public sealed class RhinoDocumentAdapter : IDocumentAdapter, IDisposable
     private bool _applying;
     private bool _previewInvalid;
     private string? _previewRequestHash;
+    private Guid[]? _previewSelection;
     private Guid? _previewRestoreId;
     private string? _previewRestoreHash;
     private DetachedPreviewConduit? _preview;
@@ -127,10 +128,11 @@ public sealed class RhinoDocumentAdapter : IDocumentAdapter, IDisposable
     {
         ValidatePlan(plan);
         ClearPreview();
-        _preview = new DetachedPreviewConduit(RuntimeSerial, plan.RestoreTarget is not null ? plan.RestoreTarget.Snapshot.Entities.Select(DeserializeGeometry).ToArray() : [BuildResultGeometry(plan)]);
+        _preview = new DetachedPreviewConduit(RuntimeSerial, plan.RestoreTarget is not null ? plan.RestoreTarget.Snapshot.Entities.Select(DeserializeGeometry).ToArray() : BuildPreviewGeometry(plan));
         _previewRestoreId = plan.RestoreTarget?.CheckpointId;
         _previewRestoreHash = plan.RestoreTarget is null ? null : Protocol.Hash(plan.RestoreTarget);
         _previewRequestHash = plan.RequestHash;
+        _previewSelection = _doc.Objects.GetSelectedObjects(false, false).Select(o => o.Id).Order().ToArray();
         _previewInvalid = false;
         _preview.Enabled = true;
         _doc.Views.Redraw();
@@ -139,7 +141,7 @@ public sealed class RhinoDocumentAdapter : IDocumentAdapter, IDisposable
     public void ClearPreview()
     {
         RhinoUiDispatcher.RequireUiThread();
-        _preview?.Dispose(); _preview = null; _previewRequestHash = null; _previewRestoreId = null; _previewRestoreHash = null; _previewInvalid = false;
+        _preview?.Dispose(); _preview = null; _previewRequestHash = null; _previewSelection = null; _previewRestoreId = null; _previewRestoreHash = null; _previewInvalid = false;
         if (!_closed) _doc.Views.Redraw();
     }
 
@@ -148,6 +150,9 @@ public sealed class RhinoDocumentAdapter : IDocumentAdapter, IDisposable
         var before = ValidatePlan(plan);
         if (_preview is null || _previewInvalid || _previewRequestHash != plan.RequestHash)
             throw new HarnessException("preview-required", "This exact plan needs a current, accepted preview before commit.");
+        if (_previewSelection is null || !_doc.Objects.GetSelectedObjects(false, false).Select(o => o.Id).Order().SequenceEqual(_previewSelection))
+            throw new HarnessException("stale-selection", "Selection changed after the displayed preview. Prepare a current preview before committing.");
+        if (plan.Request.ToolId == "cladding.plates.add") return ApplyPlates(plan, before);
         using var result = BuildResultGeometry(plan);
         var id = plan.Request.ToolId == "box.add" ? Guid.NewGuid() : plan.Request.ObjectId!.Value;
         using var attributes = plan.Request.ToolId == "box.add" ? _doc.CreateDefaultAttributes() : _doc.Objects.FindId(id).Attributes.Duplicate();
@@ -179,6 +184,94 @@ public sealed class RhinoDocumentAdapter : IDocumentAdapter, IDisposable
             if (actual.Attributes.GetUserString(Protocol.EntityKey) != attributes.GetUserString(Protocol.EntityKey))
                 throw new HarnessException("post-qa", "Engineering identity changed unexpectedly.");
         }, plan: plan);
+    }
+
+    private ApplyOutcome ApplyPlates(ChangePlan plan, DocumentSnapshot before)
+    {
+        // All geometry and attributes are detached and preflighted before opening one owned Undo record.
+        var staged = new List<(Guid Id, Brep Geometry, ObjectAttributes Attributes, string GeometryJson)>();
+        try
+        {
+            foreach (var plate in plan.Request.Plates!)
+            {
+                var geometry = BuildBox(plate.Box);
+                if (!geometry.IsValid || !geometry.IsSolid) { geometry.Dispose(); throw new HarnessException("geometry-invalid", "Plate solid could not be built exactly."); }
+                var attributes = _doc.CreateDefaultAttributes();
+                var id = Guid.NewGuid();
+                attributes.ObjectId = id;
+                attributes.SetUserString(Protocol.EntityKey, plate.EntityId);
+                attributes.SetUserString(KindKey, "box");
+                attributes.SetUserString("RhinoAi.PlateKind", "rectangular-unbent-unperforated");
+                attributes.SetUserString("RhinoAi.Material", plate.Material);
+                attributes.SetUserString("RhinoAi.ReviewProvenance", JsonSerializer.Serialize(plan.Request.Provenance, Protocol.Json));
+                attributes.SetUserString("RhinoAi.CreatedOperation", plan.Request.OperationId.ToString("D"));
+                attributes.SetUserString("RhinoAi.CreatedTask", plan.Request.TaskId.ToString("D"));
+                attributes.SetUserString("RhinoAi.LastOperation", plan.Request.OperationId.ToString("D"));
+                attributes.SetUserString("RhinoAi.Actor", "RhinoAi.Stage2.REVIEW");
+                staged.Add((id, geometry, attributes, geometry.ToJSON(Serialization)));
+            }
+            return InOwnedRecord("Rhino AI: " + plan.Summary, before, () =>
+            {
+                foreach (var item in staged)
+                {
+                    if (_doc.Objects.Add(item.Geometry, item.Attributes) != item.Id)
+                        throw new HarnessException("add-failed", "Rhino did not retain a staged plate GUID. The batch will be compensated.");
+                    var actual = _doc.Objects.FindId(item.Id) ?? throw new HarnessException("post-qa", "A staged plate is missing.");
+                    if (!actual.Geometry.IsValid || actual.Geometry.ToJSON(Serialization) != item.GeometryJson)
+                        throw new HarnessException("post-qa", "Created plate geometry differs from its exact detached preview.");
+                    foreach (var key in new[] { Protocol.EntityKey, KindKey, "RhinoAi.PlateKind", "RhinoAi.Material", "RhinoAi.ReviewProvenance", "RhinoAi.CreatedOperation", "RhinoAi.CreatedTask", "RhinoAi.LastOperation", "RhinoAi.Actor" })
+                        if (actual.Attributes.GetUserString(key) != item.Attributes.GetUserString(key))
+                            throw new HarnessException("post-qa", "Created plate identity, material or immutable review provenance differs.");
+                }
+            }, plan: plan);
+        }
+        finally { foreach (var item in staged) { item.Geometry.Dispose(); item.Attributes.Dispose(); } }
+    }
+
+    private Brep[] BuildPreviewGeometry(ChangePlan plan)
+    {
+        if (plan.Request.ToolId != "cladding.plates.add") return [BuildResultGeometry(plan)];
+        var result = new List<Brep>();
+        try
+        {
+            foreach (var plate in plan.Request.Plates!) result.Add(BuildBox(plate.Box));
+            return result.ToArray();
+        }
+        catch { foreach (var geometry in result) geometry.Dispose(); throw; }
+    }
+
+    private static Brep BuildBox(BoxSpec b) => new Box(new Plane(new Point3d(b.Origin.X, b.Origin.Y, b.Origin.Z), Vector3d.ZAxis),
+        new Interval(0, b.Width), new Interval(0, b.Depth), new Interval(0, b.Height)).ToBrep();
+
+    /// <summary>Exports only supported managed axis-aligned boxes; never turns arbitrary geometry into a bounding-box source.</summary>
+    public BoxSpec CaptureManagedBox(Guid id)
+    {
+        var current = Capture();
+        var entity = current.Entities.SingleOrDefault(e => e.RhinoId == id);
+        if (entity is null || !entity.IsValid) throw new HarnessException("unsupported-source", "Select a supported managed rectangular box.");
+        var obj = _doc.Objects.FindId(id);
+        if (obj is null || obj.Geometry is not Brep brep || !TryAxisAlignedBox(brep, _doc.ModelAbsoluteTolerance, out var box))
+            throw new HarnessException("unsupported-source", "Source must be an exact axis-aligned managed rectangular box. Arbitrary geometry is never collapsed to its bounding box.");
+        return box!;
+    }
+
+    private static bool TryAxisAlignedBox(Brep brep, double tolerance, out BoxSpec? box)
+    {
+        box = null;
+        if (!brep.IsValid || !brep.IsSolid || brep.Faces.Count != 6 || brep.Vertices.Count != 8 || brep.Edges.Count != 12) return false;
+        var bounds = brep.GetBoundingBox(true);
+        var corners = bounds.GetCorners();
+        if (!bounds.IsValid || corners.Any(c => brep.Vertices.Count(v => v.Location.DistanceTo(c) <= tolerance) != 1)) return false;
+        foreach (var edge in brep.Edges) if (!edge.IsLinear(tolerance)) return false;
+        foreach (var face in brep.Faces)
+        {
+            if (!face.TryGetPlane(out var plane, tolerance)) return false;
+            var n = plane.Normal;
+            // Every face must lie on a world-axis-aligned plane, not merely fit within the same extents.
+            if (Math.Abs(Math.Abs(n.X) - 1) > 1e-10 && Math.Abs(Math.Abs(n.Y) - 1) > 1e-10 && Math.Abs(Math.Abs(n.Z) - 1) > 1e-10) return false;
+        }
+        box = new(new(bounds.Min.X, bounds.Min.Y, bounds.Min.Z), bounds.Max.X - bounds.Min.X, bounds.Max.Y - bounds.Min.Y, bounds.Max.Z - bounds.Min.Z);
+        return box.Width > tolerance && box.Depth > tolerance && box.Height > tolerance;
     }
 
     public ApplyOutcome Restore(Checkpoint checkpoint, ExpectedContext expectedCurrent)
@@ -310,6 +403,11 @@ public sealed class RhinoDocumentAdapter : IDocumentAdapter, IDisposable
                 throw new HarnessException("schema", "Box dimensions must be finite and greater than model tolerance.");
             CheckPoint(box.Origin);
         }
+        else if (plan.Request.ToolId == "cladding.plates.add")
+        {
+            // Generic validator already checked exact batch IDs, bounds, material and source provenance.
+            foreach (var plate in plan.Request.Plates!) CheckPoint(plate.Box.Origin);
+        }
         else if (plan.Request.ToolId == "object.translate")
         {
             var entity = current.Entities.SingleOrDefault(x => x.RhinoId == plan.Request.ObjectId) ?? throw new HarnessException("managed-only", "Translation supports a single managed object.");
@@ -318,7 +416,7 @@ public sealed class RhinoDocumentAdapter : IDocumentAdapter, IDisposable
             CheckPoint(plan.Request.Translation ?? throw new HarnessException("schema", "Translation is required."));
         }
         else if (plan.Request.ToolId == "checkpoint.restore" && plan.RestoreTarget is not null) { }
-        else throw new HarnessException("unsupported-tool", "Stage 1 supports only box.add and object.translate; split/join lineage is not modeled.");
+        else throw new HarnessException("unsupported-tool", "This executor supports boxes, managed translation and reviewed rectangular plates; split/join lineage is not modeled.");
         return current;
     }
 
@@ -327,7 +425,7 @@ public sealed class RhinoDocumentAdapter : IDocumentAdapter, IDisposable
         if (plan.Request.ToolId == "box.add")
         {
             var b = plan.Request.Box!;
-            return new Box(new Plane(new Point3d(b.Origin.X, b.Origin.Y, b.Origin.Z), Vector3d.ZAxis), new Interval(0, b.Width), new Interval(0, b.Depth), new Interval(0, b.Height)).ToBrep();
+            return BuildBox(b);
         }
         var source = plan.Before.Entities.Single(x => x.RhinoId == plan.Request.ObjectId);
         var geometry = DeserializeGeometry(source);

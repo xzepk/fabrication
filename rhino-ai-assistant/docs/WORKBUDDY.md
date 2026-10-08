@@ -1,4 +1,4 @@
-# WorkBuddy：从仓库构建 Rhino AI Stage 1 并做 Windows 实机验收
+# WorkBuddy：从仓库构建 Rhino AI 单机候选并做实机验收
 
 文档日期：2026-10-08（UTC）  
 适用对象：可读取仓库、操作 Windows 桌面、运行 PowerShell 的 WorkBuddy 或其他 agent。  
@@ -7,6 +7,14 @@
 本文是仓库自包含的主入口。只需要 [fabrication 仓库](https://github.com/xzepk/fabrication) 的可信 clone 或 GitHub 源码归档，不依赖聊天附件、Library、旧交接 ZIP、另一位助手的磁盘或预编译候选。`.rhp` 和 Windows Host 在获准的 Windows 测试机本地构建；仓库不提交这些二进制。
 
 本文提供未来的执行说明。**本次仓库文档/脚本交付本身不授权安装软件、运行候选程序或操作用户电脑。** 先按第 2 节确认执行范围。构建成功、能加载插件、基础冒烟通过和完整技术验收通过，是四个不同结论。
+
+## Stage 2 本轮增量与 Windows 暂缓
+
+2026-10-08 用户决定当前没有 Windows 环境，先暂缓实机验证并推进单机自用实施。开发继续不修改 F/L 实机验收结果：仍为 ON HOLD / NOT_RUN，完整技术与生产放行保持 BLOCKED。
+
+新增路径、环境配置、选中受支持模型、自然语言/结构化任务、56 件雨棚名义表皮夹具、同快照审阅产物及明确边界见 [Stage 2 单机自用](STAGE2-LOCAL.md)。本页下文保留 Stage 1 安全基础与未来 Windows 操作步骤。当前源码可含 Stage 2 实施候选，不能把下文历史 Stage 1 限制表误读为最新功能列表；实际能力以本节及受支持 DTO/能力清单为准。
+
+构建脚本另外运行 planner 的真实本地 HTTP fixture 测试及 Stage 2 gate 测试，publish 携带固定 Skill 适配器。它们不证明真实模型已运行，也不证明 Windows/Rhino 已运行。真实独立 Skill 与56件夹具另按增量测试入口记录；缺依赖即 NOT_RUN，不用空壳模拟替代。
 
 ## 0. 可以直接交给 WorkBuddy 的任务模板
 
@@ -36,7 +44,7 @@
 - 基础闭环可用：实际观察预览/取消、一次提交、100 mm Box、100 mm X 平移、Undo/Redo、保存重开及受管恢复，并保留证据。
 - 报告完整：20 条 L 与 12 个 F 各有状态；没有执行的分支也要列出。
 - 技术通过：F-01～F-12 全部符合 [SPEC.md §37](../SPEC.md#37-acceptance-matrix)，相关 L 子项通过，证据、源码摘要和环境有效，门禁返回 0。否则完整验收保持 BLOCKED。
-- 本候选未实现自然语言 LLM、cladding Skill 集成、通用建模、图纸/BOM/套料、任意代码执行、通用 Revert/历史合并或生产下单。
+- Stage 1 基础测试不覆盖 Stage 2；当前新增的受限本地规划/平板 Skill 审阅路径见上节。通用建模、复杂构造、任意代码执行、通用 Revert/历史合并或生产下单仍未实现。
 
 ## 1. 仓库来源与固定环境
 
