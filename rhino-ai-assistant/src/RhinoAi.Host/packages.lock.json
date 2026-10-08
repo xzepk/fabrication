@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net8.0": {
+      "rhinoai.contracts": {
+        "type": "Project"
+      },
+      "rhinoai.core": {
+        "type": "Project",
+        "dependencies": {
+          "RhinoAi.Contracts": "[1.0.0, )"
+        }
+      }
+    }
+  }
+}

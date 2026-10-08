@@ -1,0 +1,2 @@
+git apply --check against exact upstream SPEC git blob114630e189f7d698eb872acab19af59cf13b1254
+exit_code=0

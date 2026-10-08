@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>RhinoAi.Plugin</AssemblyName>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+    <TargetExt>.rhp</TargetExt>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="RhinoCommon" Version="[8.20.25147.11001-rc]" ExcludeAssets="runtime" />
+    <ProjectReference Include="../RhinoAi.Contracts/RhinoAi.Contracts.csproj" />
+    <ProjectReference Include="../RhinoAi.Core/RhinoAi.Core.csproj" />
+  </ItemGroup>
+</Project>

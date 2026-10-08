@@ -1,0 +1,1 @@
+PASS release gate rejects missing/not-run/fake/stale evidence and production promotion (40 assertions)

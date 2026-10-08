@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net8.0-windows7.0": {
+      "RhinoCommon": {
+        "type": "Direct",
+        "requested": "[8.20.25147.11001-rc, 8.20.25147.11001-rc]",
+        "resolved": "8.20.25147.11001-rc",
+        "contentHash": "AUZD8jZdiQZtHO6ViN30YpyYQHh/noOLA/lH2r5scgglJjh7FX4nHvaj1YVlp7/LfeGEOxM/uqVQOEYQtYZHTQ==",
+        "dependencies": {
+          "System.Drawing.Common": "7.0.0"
+        }
+      },
+      "Microsoft.Win32.SystemEvents": {
+        "type": "Transitive",
+        "resolved": "7.0.0",
+        "contentHash": "2nXPrhdAyAzir0gLl8Yy8S5Mnm/uBSQQA7jEsILOS1MTyS7DbmV1NgViMtvV1sfCD1ebITpNwb1NIinKeJgUVQ=="
+      },
+      "System.Drawing.Common": {
+        "type": "Transitive",
+        "resolved": "7.0.0",
+        "contentHash": "KIX+oBU38pxkKPxvLcLfIkOV5Ien8ReN78wro7OF5/erwcmortzeFx+iBswlh2Vz6gVne0khocQudGwaO1Ey6A==",
+        "dependencies": {
+          "Microsoft.Win32.SystemEvents": "7.0.0"
+        }
+      },
+      "rhinoai.contracts": {
+        "type": "Project"
+      },
+      "rhinoai.core": {
+        "type": "Project",
+        "dependencies": {
+          "RhinoAi.Contracts": "[1.0.0, )"
+        }
+      }
+    }
+  }
+}

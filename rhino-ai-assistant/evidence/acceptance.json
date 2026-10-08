@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "verified_at_utc": "2026-10-08T02:15:28Z",
+  "candidate": "rhino-ai-harness-stage1-v0.2",
+  "source_digest": "f03be27fef5aecc3281c9b17f3108bea6a786b97470747fc25643ad6d07795ae",
+  "upstream_commit": "9561a0b929f9191e66230196d1be1d7453115aff",
+  "production_status": "REVIEW",
+  "stage1_release": "BLOCKED",
+  "automated_environment": {
+    "os": "Linux Debian 13 x86_64",
+    "sdk": "8.0.425",
+    "runtime": "Microsoft.NETCore.App/Microsoft.AspNetCore.App 8.0.31",
+    "plugin_target": "net8.0-windows",
+    "sdk_reference": "RhinoCommon8.20.25147.11001-rc exact range",
+    "rhino_execution": "NOT_RUN"
+  },
+  "live_environment": {},
+  "checks": {
+    "F-01": {
+      "status": "PASS",
+      "execution": "actual-sdk-compilation",
+      "evidence": [
+        "evidence/restore.log",
+        "evidence/build.log",
+        "evidence/windows-host-publish.log"
+      ],
+      "reason": "All 6 projects build in Release with exact official SDK references; actual .rhp and Windows Host apphost cross-built. Not executed in Windows/Rhino."
+    },
+    "F-02": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No connected Windows Rhino 8.20/.NET8 test environment or licensed Rhino runtime was available.",
+      "evidence": []
+    },
+    "F-03": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No connected Windows Rhino 8.20/.NET8 test environment or licensed Rhino runtime was available.",
+      "evidence": []
+    },
+    "F-04": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No connected Windows Rhino 8.20/.NET8 test environment or licensed Rhino runtime was available.",
+      "evidence": []
+    },
+    "F-05": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No connected Windows Rhino 8.20/.NET8 test environment or licensed Rhino runtime was available.",
+      "evidence": []
+    },
+    "F-06": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No connected Windows Rhino 8.20/.NET8 test environment or licensed Rhino runtime was available.",
+      "evidence": []
+    },
+    "F-07": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No connected Windows Rhino 8.20/.NET8 test environment or licensed Rhino runtime was available.",
+      "evidence": []
+    },
+    "F-08": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No connected Windows Rhino 8.20/.NET8 test environment or licensed Rhino runtime was available.",
+      "evidence": []
+    },
+    "F-09": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No connected Windows Rhino 8.20/.NET8 test environment or licensed Rhino runtime was available.",
+      "evidence": []
+    },
+    "F-10": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No connected Windows Rhino 8.20/.NET8 test environment or licensed Rhino runtime was available.",
+      "evidence": []
+    },
+    "F-11": {
+      "status": "NOT_RUN",
+      "execution": "live-windows-rhino",
+      "reason": "No connected Windows Rhino 8.20/.NET8 test environment or licensed Rhino runtime was available.",
+      "evidence": []
+    },
+    "F-12": {
+      "status": "PASS",
+      "execution": "automated",
+      "evidence": [
+        "evidence/core-tests.log",
+        "evidence/host-tests.log",
+        "evidence/release-gate-tests.log"
+      ],
+      "reason": "37 Core fake-adapter tests + 52 real HTTP process tests pass; gate regression passes 40 assertions. All are separate from live Rhino acceptance."
+    }
+  },
+  "automated_results": {
+    "core_cases_passed": 37,
+    "core_cases_total": 37,
+    "http_process_cases_passed": 52,
+    "http_process_cases_total": 52,
+    "release_gate_assertions_passed": 40,
+    "release_gate_assertions_total": 40,
+    "build_warnings": 0,
+    "build_errors": 0
+  },
+  "existing_skills_integrity": {
+    "cladding_delivery": {
+      "manifest_checks_passed": 56,
+      "manifest_checks_total": 56
+    },
+    "cad_fabrication_engineering_v3": {
+      "manifest_checks_passed": 35,
+      "manifest_checks_total": 35
+    }
+  },
+  "boundaries": [
+    "No repository push/PR/publication",
+    "No installation on user computer",
+    "No live Rhino success inferred",
+    "Manual reviewed reconciliation required after genuine partial-effect quarantine",
+    "Managed-scope restore only; no arbitrary full-document restore",
+    "No LLM or cladding Skill integration in this stage"
+  ]
+}

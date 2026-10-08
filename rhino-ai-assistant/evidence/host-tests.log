@@ -1,0 +1,53 @@
+PASS authenticated health and REVIEW status
+PASS short startup nonce fails closed
+PASS missing bearer nonce denied
+PASS incorrect bearer nonce denied
+PASS Origin header denied even with valid auth
+PASS external Host header denied
+PASS wrong loopback Host port denied
+PASS external URL config cannot change loopback bind
+PASS unknown endpoint and arbitrary code endpoint denied
+PASS invalid operation UUID rejected
+PASS unknown operation gives typed not-found
+PASS wrong Content-Type rejected
+PASS content-encoded body rejected
+PASS oversize Content-Length rejected
+PASS oversize chunked body rejected
+PASS malformed JSON rejected
+PASS null and missing required fields rejected
+PASS unknown JSON fields rejected
+PASS duplicate JSON keys rejected
+PASS missing scalar DTO fields do not silently default
+PASS wrong JSON property case rejected
+PASS unsupported protocol rejected
+PASS unsupported tool rejected
+PASS invalid geometry and stale context rejected
+PASS numeric operation enums rejected
+PASS prepare persists detached plan and before checkpoint
+PASS numeric NaN and null entity entries rejected
+PASS same operation/hash deduplicates concurrent retries
+PASS same operation changed payload rejected
+PASS commit without applying acknowledgement rejected
+PASS applying acknowledgement durably persisted before mutation
+PASS concurrent same-document applying blocked
+PASS arbitrary post-applying cancellation rejected
+PASS invalid completion cannot claim commit
+PASS verified completion committed
+PASS lost completion ACK retry returns identical stored outcome
+PASS same terminal state changed outcome rejected
+PASS committed record cannot replay applying
+PASS restart preserves completed operation and changes session nonce
+PASS restart quarantines interrupted applying
+PASS new operations blocked until document recovery reconciled
+PASS durable plugin completion reconciles host crash without reapply
+PASS proven pre-mutation cancellation reconciles applying
+PASS prepared reject and cancel are terminal
+PASS checkpoint restore verifies effect and survives restart
+PASS translation verifies changed fingerprint and preserves business identity
+PASS checkpoint restore changed target under same ID conflicts
+PASS malformed journal fails closed without automatic reset
+PASS unknown and corrupt journals fail closed at startup
+PASS second host cannot share the journal writer lease
+PASS nonce never persisted or logged
+PASS storage failure refuses success and quarantines health
+Host HTTP integration: 52 PASS, 0 FAIL. Live Rhino: NOT_RUN.

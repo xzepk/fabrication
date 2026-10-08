@@ -1,0 +1,38 @@
+PASS preview and reject do not mutate
+PASS commit has durable before-image and verified result
+PASS lost acknowledgement replay never mutates twice
+PASS replay after native undo does not redo
+PASS cancel while queued for UI prevents mutation
+PASS same operation different arguments is conflict
+PASS tampered plan hash is rejected
+PASS manual edit invalidates preview
+PASS session change invalidates preview
+PASS document switch invalidates preview
+PASS cancel before apply leaves document unchanged
+PASS cancel after applying boundary returns actual result
+PASS concurrent same-op commits exactly once
+PASS superseded preview cannot commit
+PASS zero Undo record fails closed
+PASS partial mutation quarantines further execution
+PASS pre-apply journal failure makes no document mutation
+PASS lost durable completion does not report success
+PASS host Applying callback outside adapter mutation
+PASS host Applying acknowledgement failure does not mutate
+PASS cancel during host acknowledgement prevents mutation
+PASS stale context after host boundary never mutates
+PASS actual effect mismatch does not commit
+PASS native undo redo identity reconciles in fake
+PASS translate records exactly target effect
+PASS checkpoint restore has pre-restore safeguard
+PASS restore payload hash binds target geometry
+PASS restore cross-document checkpoint blocked
+PASS duplicate engineering IDs block QA
+PASS unsupported unit and invalid tolerance block
+PASS nonfinite geometry and unsupported tools blocked
+PASS unknown JSON fields rejected
+PASS durable restart replay and new-session protection
+PASS corrupt persisted payload fails closed
+PASS misplaced valid journal file fails closed
+PASS crashed Applying record quarantines restart
+PASS durable store excludes concurrent writers
+RESULT 37/37 passed. Fake adapter tests do not constitute live Rhino acceptance.

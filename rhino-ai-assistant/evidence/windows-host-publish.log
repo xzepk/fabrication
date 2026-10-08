@@ -1,0 +1,10 @@
+  Determining projects to restore...
+  Restored /workspace/shared/fabrication/rhino-ai-assistant/src/RhinoAi.Contracts/RhinoAi.Contracts.csproj (in 93 ms).
+  Restored /workspace/shared/fabrication/rhino-ai-assistant/src/RhinoAi.Host/RhinoAi.Host.csproj (in 101 ms).
+  Restored /workspace/shared/fabrication/rhino-ai-assistant/src/RhinoAi.Core/RhinoAi.Core.csproj (in 101 ms).
+  RhinoAi.Contracts -> /workspace/shared/fabrication/rhino-ai-assistant/src/RhinoAi.Contracts/bin/Release/net8.0/RhinoAi.Contracts.dll
+  RhinoAi.Core -> /workspace/shared/fabrication/rhino-ai-assistant/src/RhinoAi.Core/bin/Release/net8.0/RhinoAi.Core.dll
+  RhinoAi.Host -> /workspace/shared/fabrication/rhino-ai-assistant/src/RhinoAi.Host/bin/Release/net8.0/win-x64/RhinoAi.Host.dll
+  RhinoAi.Host -> /workspace/shared/fabrication/rhino-ai-assistant/artifacts/windows-candidate/host/
+
+Cross-built Windows candidate only. Live Rhino acceptance remains required.

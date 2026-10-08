@@ -1,0 +1,5 @@
+  Determining projects to restore...
+  Restored /workspace/shared/fabrication/rhino-ai-assistant/src/RhinoAi.Host/RhinoAi.Host.csproj (in 95 ms).
+  Restored /workspace/shared/fabrication/rhino-ai-assistant/src/RhinoAi.Contracts/RhinoAi.Contracts.csproj (in 90 ms).
+  Restored /workspace/shared/fabrication/rhino-ai-assistant/src/RhinoAi.Core/RhinoAi.Core.csproj (in 95 ms).
+  3 of 6 projects are up-to-date for restore.

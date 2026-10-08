@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/xzepk/fabrication",
+  "verified_upstream_commit": "9561a0b929f9191e66230196d1be1d7453115aff",
+  "upstream_spec_path": "rhino-ai-assistant/SPEC.md",
+  "upstream_spec_git_blob": "114630e189f7d698eb872acab19af59cf13b1254",
+  "verified_at_utc": "2026-10-08T01:48:50Z",
+  "source_spec_version": "0.1",
+  "updated_spec_version": "0.2",
+  "scope": "New Rhino harness module only. Existing independent skill source and original DWG inputs untouched.",
+  "publication": "LOCAL_ONLY; no push, PR, installer or deployment performed"
+}

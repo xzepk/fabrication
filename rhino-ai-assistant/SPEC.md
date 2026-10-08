@@ -1,7 +1,8 @@
 # Rhino AI Agent Harness — Product & Technical Specification
 
-> Status: Draft for Review  
-> Version: 0.1  
+> Status: Implementation baseline; production release blocked until stage gates pass  
+> Version: 0.2  
+> Updated: 2026-10-08; based on upstream commit `9561a0b929f9191e66230196d1be1d7453115aff`  
 > Target: Rhino 8 / Windows first  
 > Repository module: `rhino-ai-assistant/`
 
@@ -291,7 +292,7 @@ The V1 protocol MUST NOT prevent this migration.
 ## 7.1 Recommended stack
 
 - C#
-- .NET compatible with Rhino 8
+- .NET 8; Windows Rhino 8.20 or later running the .NET 8 runtime; pinned RhinoCommon 8.20 reference package (exact package version in project/lock files). Newer runtime combinations require explicit live qualification; no .NET Framework compatibility claim.
 - RhinoCommon
 - Eto.Forms
 - optional WebView for modern chat UI
@@ -542,7 +543,7 @@ geometry.volume
 geometry.curvature
 ```
 
-V1 target: approximately 30–50 high-confidence Tools, not hundreds of low-level wrappers.
+The catalog above is a roadmap, not a V1 tool-count commitment. Stage 1 SHALL prove a narrow, dependable vertical slice before expanding tools. Stage 1 initially supports context inspection, box creation/translation, Preview/Commit, checkpoint and recovery commands. Unsupported tools fail explicitly.
 
 ---
 
@@ -552,7 +553,7 @@ V1 target: approximately 30–50 high-confidence Tools, not hundreds of low-leve
 
 Agent/HTTP work MAY run asynchronously.
 
-Any Rhino document mutation SHOULD be dispatched through the Rhino UI execution path before mutating `RhinoDoc`.
+All live Rhino document reads, reference resolution, geometry duplication, and mutations MUST run on the Rhino UI thread. Background calculation MUST use detached immutable snapshots or independently duplicated geometry only. Apply is serialized per document and revalidates the document/session/revision/object expectations immediately before mutation. See section 42.
 
 Conceptual flow:
 
@@ -615,7 +616,7 @@ Examples:
 - number panels;
 - modify attributes.
 
-Policy: may auto-execute inside one Undo transaction, followed by ChangeSet/Commit.
+Policy: bounded reversible edits may auto-execute only with explicit configured permission. Stage 1 always requires an accepted Preview. Undo does not provide database atomicity or durable rollback; see section 43.
 
 ## R2 — Structural Change
 
@@ -626,7 +627,7 @@ Examples:
 - large-scale deletion;
 - major geometry rebuild.
 
-Policy: Preview required before applying unless user has explicitly trusted the operation.
+Policy: Preview required before applying in V1. Any later configurable trusted-operation exception requires an explicit revised policy and its own acceptance evidence.
 
 ## R3 — External / Irreversible
 
@@ -645,7 +646,7 @@ Risk classification MUST be part of the Tool definition, not improvised only by 
 
 # 13. Preview System
 
-R2 changes SHOULD support an interactive model preview.
+R2 changes MUST support an interactive model preview. Stage 1 also requires Preview for R1 mutations. Preview is detached/non-authoritative, bound to a document session and revision, and invalidated on any relevant edit, undo/redo, close/reopen, or identity collision.
 
 Recommended representation:
 
@@ -945,7 +946,7 @@ Use case:
 
 ## 21.2 Revert Commit
 
-Create a new Commit that inverses an older Commit.
+Create a new Commit that inverses an older Commit. Any V1 Revert support is limited to conflict-free task-local inversion when all affected objects still match the recorded after-images. Overlapping later edits, uncertain identity, and missing before-images MUST block Revert; general semantic merge is deferred.
 
 History remains intact.
 
@@ -965,7 +966,7 @@ Use case:
 
 > Restore the model to the field-survey milestone.
 
-Restore SHOULD be explicit and SHOULD create a traceable event/commit instead of silently deleting history.
+Restore MUST be explicit and create a traceable event/commit instead of silently deleting history. Its UI MUST identify exact scope and all later human/AI edits that will be replaced. A pre-restore durable checkpoint is mandatory. Stage 1 restores the explicitly declared supported managed-object scope; full-document file replacement, arbitrary historical reconstruction, and conflict merge are not implied. Unmanaged objects remain outside that scoped restore. Full 3DM checkpoint files are separate recovery artifacts and never silently overwrite the user source file.
 
 ---
 
@@ -993,7 +994,7 @@ The product SHOULD eventually support engineering comparison:
 
 Branching turns version control into a design exploration mechanism.
 
-Branching is Phase 2 unless implementation cost is low enough to include in V1.
+Branching is Stage 3 only, after V1 release gates pass; it MUST NOT displace foundational validation.
 
 ---
 
@@ -1262,7 +1263,7 @@ Sensitive prompt/context content SHOULD support redaction policy.
 
 # 32. Evaluation
 
-V1 SHOULD include an evaluation harness instead of evaluating only by visual impression.
+V1 MUST include automated regression, minimal deterministic model QA, and a fail-closed release gate. Visual impression is not an acceptance test. See sections 45–46.
 
 Suggested dimensions:
 
@@ -1316,186 +1317,93 @@ The exact code layout may evolve, but Plugin, Host, Protocol, Versioning and Ski
 
 ---
 
-# 34. MVP Scope
+# 34. Staged Delivery Scope (replaces monolithic MVP)
 
-V1 MUST prove the complete Harness architecture, not feature breadth.
+V1 is the combined result of Stages 1 and 2, released only after their acceptance gates. Completing code compilation or headless tests alone does not complete Stage 1. The original broad catalog remains roadmap material.
 
-## 34.1 UI
+## 34.1 Stage 1 — Dependable foundational vertical slice
 
-Required:
+Outcome: a compilable Rhino 8 Windows plugin plus a separate local .NET Agent Host with versioned HTTP IPC and persistent task state, proving:
 
-- Floating Assistant;
-- Dock Panel;
-- Chat;
-- Task Timeline;
-- Changes Timeline.
-
-## 34.2 Context
+`detached context → plan → Preview → accepted Commit → Undo/Redo → save/reopen → checkpoint Restore`.
 
 Required:
+- Eto floating window and dockable panel entry points; task/change/status and explicit Preview/Apply/Reject controls.
+- Small deterministic tool registry; first executable operations are box creation and translation of supported managed objects. No arbitrary code endpoint.
+- UI-thread snapshot/apply adapter, detached viewport preview, serialized writes, context and object preconditions, bounded cancellation.
+- Stable document ID, fresh reopen/session ID, monotonically reconciled revision; engineering identity separate from Rhino GUID.
+- Durable task/operation journal, before-images/checkpoints, operation-ID and payload-hash deduplication, lost-ACK recovery, honest ambiguous-state quarantine.
+- One owned Undo record for a meaningful task; native Undo/Redo observation and save/reopen reconciliation.
+- Managed-scope checkpoint Restore with displayed replacement scope and preserved unmanaged objects; task-local no-conflict Revert may be added only with the same safeguards.
+- Minimal QA and regression/release gate from the first commit. Review status remains `REVIEW`.
+- Structured planner/tool and Skill-registry interfaces; the foundation may use deterministic explicit tool input. Natural-language LLM integration is Stage 2 and MUST NOT be represented as already implemented.
 
-- active document;
-- units/tolerance;
-- layers;
-- selection;
-- basic geometry summary;
-- viewport capture.
+Exit: all Stage 1 automated and live acceptance rows pass on the pinned Windows Rhino/runtime. Without that environment, record `BLOCKED` or `NOT_RUN`, and deliver an implementation candidate only.
 
-## 34.3 Tools
+## 34.2 Stage 2 — Cladding scenario and engineering outputs
 
-Required:
-
-- approximately 30 core read/edit geometry/object/layer/document Tools;
-- schema validation;
-- risk levels;
-- Undo support.
-
-## 34.4 Agent Runtime
+Outcome: supported canopy/cladding scenario from selected Rhino source through accepted Skill result and consistent review outputs.
 
 Required:
+- LLM gateway, bounded planner, contextual tool calling, discoverable Skill adapter and explicit capability manifest.
+- Integrate existing independent `cladding-delivery` package without merging it with `cad-fabrication-engineering-v3`, renaming their identities, or forcing a new runtime dependency on either existing package.
+- Deepen geometry/tools only when a golden engineering scenario requires them.
+- Model, drawings, BOM and nesting outputs bound to one immutable snapshot hash and rule/Skill versions.
+- Explicit unsupported-feature list; complex returns, corner/notch/cutout/join/fold allowances and other absent semantics block production and are never silently omitted.
+- Review evidence and production release decision separated. Source-only cladding remains `REVIEW`; Rhino adoption alone does not change it.
 
-- LLM Gateway abstraction;
-- Tool Calling;
-- simple task planner;
-- persistent task state;
-- policy enforcement.
-
-## 34.5 Versioning
-
-Required in V1:
-
-- Rhino Undo transaction;
-- ChangeSet;
-- Commit;
-- Change Timeline;
-- Revert;
-- Restore;
-- persistent Engineering Entity ID;
-- checkpoint + delta architecture.
-
-## 34.6 Preview
-
-Required for R2:
-
-- object-level add/modify/delete preview;
-- Apply / Reject;
-- ChangeSet summary.
-
-## 34.7 Skill integration
-
-Required:
-
-- Skill Registry;
-- invoke `cladding-delivery`;
-- receive structured progress/results;
-- map generated engineering objects into Rhino;
-- preserve engineering IDs;
-- create Commit after acceptance.
+Exit: golden scenario regression plus source-geometry/model/drawing/BOM consistency and human engineering release checks. Chinese labels require visual verification in final rendering; otherwise collision-safe ASCII English/pinyin labels plus reversible ID mapping.
 
 ---
 
-# 35. Phase 2
+# 35. Stage 3 — Expert and Design Exploration
 
-After V1:
-
-- design branches;
-- branch comparison;
-- Milestone UI;
-- Vision Agent;
-- richer Code Mode;
+Only after dependable Stage 1/2 gates:
+- isolated expert Code Mode, explicit approvals, no unrestricted Rhino-process execution;
+- Vision paired with deterministic measurement;
+- branches, compare and milestone UI;
 - Grasshopper integration;
-- model-qa Skill;
-- drawing-generation Skill;
-- quantity-takeoff Skill;
-- more sophisticated evaluation.
+- deeper model-QA/drawing-generation/quantity-takeoff Skills;
+- richer evaluation and tool breadth.
+
+Minimal model QA and regression are already mandatory in Stage 1, not deferred here.
 
 ---
 
-# 36. Phase 3
+# 36. Stage 4 — Team and Remote Platform
 
-Enterprise/platform stage:
-
-- remote Linux Agent Platform;
-- team projects;
-- shared version history;
-- role-based approval;
-- remote Artifact Store;
-- organization Skill registry;
-- multi-Agent execution;
-- enterprise LLM routing;
-- centralized evaluation;
-- project policy management.
+Remote Linux Agent Host, team projects, shared history, role-based approvals, remote artifact/Skill registry, multi-Agent execution, centralized policy/evaluation. Remote authentication and persistent permissions require separate design and approval. Rhino executor remains Windows-first. Linux Rhino.Compute is optional official WIP/nonproduction exploration only, not a V1 prerequisite, production claim or licensing dependency.
 
 ---
 
-# 37. V1 Acceptance Criteria
+# 37. Acceptance Matrix
 
-V1 is successful only if the following end-to-end flows are demonstrably working.
+Each result SHALL record environment, exact source/package/runtime versions, evidence location and `PASS`, `FAIL`, `BLOCKED`, or `NOT_RUN`. Fake-adapter tests never count as live Rhino acceptance.
 
-## AC-01 Read context
-
-User can ask:
-
-> What are the currently selected objects?
-
-Agent returns accurate Rhino-derived information without mutation.
-
-## AC-02 Reversible edit
-
-User requests:
-
-> Move these objects to a new layer.
-
-System:
-
-1. creates/uses structured Tool Calls;
-2. executes in Rhino;
-3. creates one Undo transaction;
-4. generates ChangeSet;
-5. creates Commit;
-6. Ctrl+Z or Agent Undo correctly reverses it.
-
-## AC-03 Preview
-
-User requests a large model change.
-
-System shows add/modify/delete Preview before commit and does not mutate authoritative state until Apply.
-
-## AC-04 Revert
-
-Given C001 → C002 → C003, user can revert C002 while preserving history, producing a new Commit.
-
-## AC-05 Restore
-
-User can restore a previous checkpoint/Commit and the resulting Rhino geometry and engineering entity mapping are consistent.
-
-## AC-06 Human edit tracking
-
-A relevant manual Rhino edit is detected and appears in the Working Model / Change tracking layer.
-
-## AC-07 Persistent engineering ID
-
-Replacing/rebuilding a Rhino object does not lose its EngineeringEntityId when the operation represents the same engineering object.
-
-## AC-08 Skill integration
-
-User requests a supported cladding task.
-
-Agent invokes `cladding-delivery`, displays plan/progress, produces structured engineering outputs, creates Rhino objects with engineering IDs, and records accepted changes in version history.
-
-## AC-09 Risk policy
-
-R0 executes automatically; R2 requires Preview; R3 requires explicit confirmation.
-
-## AC-10 Failure transparency
-
-Unsupported geometry or Skill cases are surfaced as explicit blocked/unsupported results and are never silently approximated into production-ready geometry.
+| ID | Stage | Required evidence |
+|---|---|---|
+| F-01 | 1 | Actual host and RhinoCommon/Eto plugin compile with pinned dependencies; no placeholder Rhino SDK |
+| F-02 | 1 | Live selected document units, tolerance, selection and identity snapshot; no context mutation |
+| F-03 | 1 | Live detached Preview; Reject and pre-apply cancellation leave document unchanged |
+| F-04 | 1 | Accepted Preview creates exactly expected geometry and one semantic commit/owned Undo record |
+| F-05 | 1 | Live native Undo then Redo reconciles geometry, identity, revision and preview invalidation |
+| F-06 | 1 | Save, close and reopen restores IDs/history references while creating a new session; old requests fail |
+| F-07 | 1 | Checkpoint restore previews scope, safeguards later edits, verifies actual resulting managed model |
+| F-08 | 1 | Concurrent apply, stale revision, switched/closed document, modified/deleted object and duplicate business IDs fail closed |
+| F-09 | 1 | Operation retry after lost ACK produces no second mutation; changed payload under same ID is rejected |
+| F-10 | 1 | BeginUndoRecord returning 0, partial mutation, disk failure and crash during apply lead to documented recovery state; never a false success |
+| F-11 | 1 | Manual copy/replace/delete and undo/redo reconcile IDs; ambiguous split/join lineage is blocked |
+| F-12 | 1 | Automated race/cancel/partial-failure/replay/persist/restore regression and QA/release gate run |
+| S-01 | 2 | Existing Skill independence and unsupported-feature disclosure verified |
+| S-02 | 2 | Cladding task through Host, Rhino Preview/Commit and consistent model/drawing/BOM snapshot |
+| S-03 | 2 | Chinese glyph visual inspection or ASCII/pinyin + collision-safe ID map; no garbled delivery |
+| S-04 | 2 | Production approval remains separately gated; golden fixtures and actual effects validated |
 
 ---
 
 # 38. Initial End-to-End Showcase
 
-The first showcase SHOULD use the canopy/cladding scenario because it exercises both generic Harness and professional Skill behavior.
+The Stage 2 showcase SHOULD use the canopy/cladding scenario because it exercises both generic Harness and professional Skill behavior. Stage 1 first proves the smaller executable safety loop. Alternate-branch comparison in this narrative is Stage 3, not required to close Stage 1.
 
 Example:
 
@@ -1585,49 +1493,77 @@ This showcase SHALL prove:
 
 ---
 
-# 40. Recommended Implementation Order
+# 40. Implementation Order
 
-```text
-1. Rhino Plugin shell
-      ↓
-2. Agent Host + protocol
-      ↓
-3. Context Collector
-      ↓
-4. Core Tool Registry + Executor
-      ↓
-5. Undo transaction
-      ↓
-6. Change Tracker
-      ↓
-7. ChangeSet / Commit / Restore
-      ↓
-8. Preview
-      ↓
-9. Skill Registry
-      ↓
-10. cladding-delivery integration
-      ↓
-11. End-to-End canopy showcase
-      ↓
-12. Branch / Vision / Code / Grasshopper expansion
-```
+1. Update this actual source-controlled spec and protocol, then begin implementation without another planning approval.
+2. Build Stage 1 Host, Contracts and real Rhino adapter in parallel against shared DTOs; add failure tests with the implementation.
+3. Run Linux headless tests and actual plugin compilation; separately run Windows/Rhino live acceptance when available.
+4. Review findings, repair recoverable code defects, re-run affected checks; keep remaining live gates blocked if Rhino is unavailable.
+5. Add the Stage 2 Skill scenario only after the Stage 1 execution/recovery foundation is accepted.
+6. Expand Stage 3 and 4 only after corresponding gates.
 
-Do not prioritize pet animation, broad LLM provider support, or hundreds of Rhino commands before the execution/version architecture is validated.
+No repository publication, installer execution on the user's computer, remote access grant or production release is implied by local implementation authorization.
 
 ---
 
-# 41. Review Questions
+# 41. Resolved Review Decisions and Remaining Gates
 
-The first architecture review SHOULD focus on:
+Accepted: Plugin/Host and Tool/Skill separation; local-first; task-level Commit; checkpoint plus object deltas; stable business IDs; structured tools by default; small vertical slice first; minimal QA/regression/release gate in V1.
 
-1. Is Plugin / Agent Host separation accepted?
-2. Is Tool / Skill separation accepted?
-3. Is ChangeSet / Commit / Restore mandatory for V1?
-4. Should R1 reversible Agent edits auto-commit or remain uncommitted until user approval?
-5. What is the preferred storage for geometry deltas and full 3DM checkpoints?
-6. Does V1 need Branch, or can Branch remain Phase 2 while the DAG-compatible data model is implemented now?
-7. How should `cladding-delivery` exchange geometry with Rhino: canonical geometry contract, file artifacts, or both?
-8. Which 30–50 Rhino Tools constitute the minimum viable Tool Registry?
-9. Which operations are R2 versus R3 for the first engineering deployment?
-10. What level of human edit tracking is required before the first production pilot?
+Stage 1 uses explicit Preview acceptance for writes. It has no unrestricted script executor and no external LLM credential requirement. Broader Revert/merge, complete tool catalog and production cladding readiness remain gated, not promised by compilation.
+
+---
+
+# 42. Normative Execution and IPC Contract
+
+- Every live Rhino read/duplicate/resolve/write is dispatched to the UI thread; background geometry work uses detached owned values. No live RhinoObject/RhinoDoc crosses asynchronous calculation boundaries.
+- Apply is serialized per document. Check expected document ID, fresh session ID, revision, units/tolerance and object ID/fingerprint immediately before opening Undo. Validate again after any preparatory asynchronous boundary.
+- Requests carry protocol version, task ID, operation ID, expected context, tool ID, typed arguments and deterministic request hash. Unknown protocol/tool/fields or invalid numbers fail closed.
+- Operation IDs are idempotency keys scoped to document/task. Same ID + same hash returns the stored outcome; same ID + different payload is rejected. Restart with ambiguous apply state blocks automatic replay until recovery is reconciled.
+- Local Host binds loopback only; plugin starts/uses its paired Host with a per-process nonce delivered in private process transport, never persisted or logged. No external listen address, browser-origin requests, arbitrary export path or arbitrary-code endpoint.
+- Network/LLM work and user approval happen outside an Undo record. Cancellation before mutation guarantees no document changes. Once synchronous apply begins, cancellation cannot interrupt it mid-record: return its verified outcome or recovery requirement.
+
+# 43. Normative Transaction and Recovery Contract
+
+Rhino Undo is an interactive history facility, not ACID, a filesystem transaction or a durable rollback guarantee.
+
+- Separate task states from operation states. Operations use `prepared → applying → committed`, with `cancelled`, `rejected`, and `failed-recovery` as explicit terminal/recovery conditions.
+- Before mutation, durably save the approved request, detached before-images and checkpoint reference. Atomically replace journal files with write-through/flush; record failures honestly. No append-only claim without an actual append log.
+- BeginUndoRecord returning 0 aborts before mutation. Never end an Undo record not owned by this executor; native command context and modeless UI context are distinct.
+- Apply, post-effect QA, before-image compensation and closing the owned Undo record are synchronous UI-thread work. Unexpected partial effects enter `failed-recovery` unless compensation is verified. No blind Undo that could remove a human operation.
+- Persist the verified outcome before acknowledging. If durable completion fails after model mutation, record/quarantine ambiguity and do not label the operation cancelled or silently retry.
+- Checkpoints and managed geometry deltas are recovery artifacts; saving the model remains explicit. Preview invalidates on any context divergence. Existing original DWG/3DM inputs are never overwritten implicitly.
+- Export is separately staged, checksummed and logged; only approved atomic promotion publishes it. A model Undo does not undo an external file write.
+- Revert applies only no-conflict task-local inverses in V1. Restore presents scope and impact on later human edits, takes a pre-restore safeguard, preserves audit history and verifies the resulting model.
+
+# 44. Normative Engineering Identity Lifecycle
+
+- `EngineeringEntityId` is a stable business identity. Rhino GUID is an instance lookup only. Persist ID and lineage in supported object attributes/document metadata, and verify save/reopen.
+- Replacing one logical object preserves its business ID and records old/new Rhino GUID association. Reconcile replace-event sequences at a stable UI boundary, not from a transient delete callback alone.
+- Copy creates a new identity with `copiedFrom`; copied user strings MUST be detected. An unapproved manual collision is a blocking QA issue until explicitly reconciled; never silently collapse two objects.
+- Split/join/boolean record many-to-many parent/child lineage and retire source identities only after successful apply. Stage 1 does not support these operators; unsupported lineage is surfaced rather than guessed.
+- Human mutations, imports, native Undo/Redo, deletes and reopened files are reindexed from the actual document. Avoid mutation inside notification callbacks. Undo/Redo can resurrect or remove objects; IDs must be reconciled without automatically reapplying a task.
+- Identity mapping, per-object fingerprints, actor and task provenance survive checkpoint restore; uncertain mappings block release.
+
+# 45. Normative Model QA and Engineering Release
+
+- Preflight: supported units, finite positive tolerance, finite dimensions/transforms, valid geometry, allowed object count/scope, unique IDs and required features present.
+- Postflight: verify actual object count, actual geometry validity/dimensions and ID mapping; compare effects against the approved plan. A successful API return is insufficient.
+- One snapshot hash binds all artifacts required by the current stage/tool. In Stage 2 this includes model, drawings, BOM, nesting and metadata; Stage 1 has no implied drawing/BOM/nesting deliverable. Reject mixed revisions or missing expected outputs.
+- `REVIEW`, `APPROVED_FOR_PRODUCTION`, and `REJECTED/BLOCKED` are distinct. No automatic transition to production just because tests or Rhino APIs pass.
+- Chinese file/drawing labels require inspection of rendered pixels in final artifact and target font environment. Without this evidence use ASCII English/pinyin names plus collision-safe identity mapping. A font installed on another machine is not visual evidence.
+- Current cladding source-only limitations remain explicit. Unsupported folds/returns/cutouts/complex joints or other features block fabrication/order status.
+
+# 46. Verification Evidence and Source References
+
+Build/test reports SHALL include source hashes, pinned dependencies, command/exit code, test counts, failure injection coverage and separate live acceptance status. A release gate fails while a required live row is `BLOCKED` or `NOT_RUN`. README capability claims must match this matrix.
+
+Primary API references (checked 2026-10-08):
+- Rhino .NET runtime baseline: https://www.rhino3d.com/en/docs/guides/netcore/ (Rhino 8.20 defaults to .NET 8; later releases still require explicit qualification).
+- Undo API: https://developer.rhino3d.com/api/rhinocommon/rhino.rhinodoc/beginundorecord
+- Undo semantics: https://docs.mcneel.com/rhino/8/help/en-us/commands/undo.htm
+- Threaded document reads discussion: https://discourse.mcneel.com/t/async-multithreaded-document-read/201922
+- Persisted plugin/object metadata: https://developer.rhino3d.com/guides/rhinocommon/plugin-user-data/
+- Detached display preview: https://developer.rhino3d.com/en/guides/rhinocommon/display-conduits/
+
+This v0.2 is an amendment of the actual v0.1 repository spec, not a reconstructed replacement. Original sections 1–33 and 38–39 retain product architecture; sections 34–37 and 40–46 now define implementable stages and mandatory safety contracts.
